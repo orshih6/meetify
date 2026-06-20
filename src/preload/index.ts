@@ -1,8 +1,14 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 const api = {
-  platform: process.platform
+  platform: process.platform,
+  recording: {
+    requestMicPermission: (): Promise<boolean> =>
+      ipcRenderer.invoke('recording:request-mic-permission'),
+    save: (buffer: ArrayBuffer, filename: string): Promise<string> =>
+      ipcRenderer.invoke('recording:save', new Uint8Array(buffer), filename)
+  }
 }
 
 if (process.contextIsolated) {

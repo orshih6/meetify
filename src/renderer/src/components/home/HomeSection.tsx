@@ -1,14 +1,46 @@
 import { Button, Switch } from '@headlessui/react'
 import { MicrophoneIcon, StopIcon } from '@heroicons/react/16/solid'
+import { formatDuration } from '@renderer/lib/format'
 import { cn } from '@renderer/lib/utils'
 import { useHomeStore } from '@renderer/stores/homeStore'
+import { useEffect, useState } from 'react'
 
 export function HomeSection(): React.JSX.Element {
   const isDetectable = useHomeStore((state) => state.isDetectable)
   const isRecording = useHomeStore((state) => state.isRecording)
+  const isStarting = useHomeStore((state) => state.isStarting)
+  const isStopping = useHomeStore((state) => state.isStopping)
+  const recordingError = useHomeStore((state) => state.recordingError)
+  const recordingWarning = useHomeStore((state) => state.recordingWarning)
+  const lastSavedPath = useHomeStore((state) => state.lastSavedPath)
+  const recordingStartedAt = useHomeStore((state) => state.recordingStartedAt)
   const toggleDetectable = useHomeStore((state) => state.toggleDetectable)
   const startRecording = useHomeStore((state) => state.startRecording)
   const stopRecording = useHomeStore((state) => state.stopRecording)
+
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+
+  useEffect(() => {
+    if (!isRecording || recordingStartedAt === null) {
+      return
+    }
+
+    const updateElapsed = (): void => {
+      setElapsedSeconds(Math.floor((Date.now() - recordingStartedAt) / 1000))
+    }
+
+    const timeoutId = window.setTimeout(updateElapsed, 0)
+    const intervalId = window.setInterval(updateElapsed, 1000)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+      window.clearInterval(intervalId)
+    }
+  }, [isRecording, recordingStartedAt])
+
+  const displayElapsed = isRecording ? elapsedSeconds : 0
+
+  const isRecordDisabled = isStarting || isStopping
 
   return (
     <section className="border-b border-neutral-900 pt-6 pb-8">
@@ -42,11 +74,13 @@ export function HomeSection(): React.JSX.Element {
       </div>
 
       <Button
-        onClick={isRecording ? stopRecording : startRecording}
+        onClick={() => void (isRecording ? stopRecording() : startRecording())}
+        disabled={isRecordDisabled}
         className={cn(
           'mt-6 flex w-full items-center justify-center gap-2 rounded-full px-4 py-3',
           'text-sm font-medium transition-colors',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600',
+          'disabled:cursor-not-allowed disabled:opacity-60',
           isRecording
             ? 'bg-red-600 text-white hover:bg-red-500'
             : 'border border-neutral-700 text-white hover:border-neutral-600 hover:bg-neutral-900'
@@ -55,15 +89,23 @@ export function HomeSection(): React.JSX.Element {
         {isRecording ? (
           <>
             <StopIcon className="h-4 w-4" />
-            Stop Record
+            {isStopping ? 'Stopping...' : `Stop Record (${formatDuration(displayElapsed)})`}
           </>
         ) : (
           <>
             <MicrophoneIcon className="h-4 w-4" />
-            Start Record
+            {isStarting ? 'Starting...' : 'Start Record'}
           </>
         )}
       </Button>
+
+      {recordingWarning ? <p className="mt-3 text-xs text-amber-500">{recordingWarning}</p> : null}
+
+      {recordingError ? <p className="mt-3 text-xs text-red-400">{recordingError}</p> : null}
+
+      {lastSavedPath ? (
+        <p className="mt-3 text-xs text-neutral-500">Saved to {lastSavedPath}</p>
+      ) : null}
     </section>
   )
 }
