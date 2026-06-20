@@ -1,5 +1,6 @@
 import { Button } from '@headlessui/react'
 import { ArrowUpIcon } from '@heroicons/react/16/solid'
+import { ContentContainer } from '@renderer/components/ContentContainer'
 import { cn } from '@renderer/lib/utils'
 import { useDetailStore } from '@renderer/stores/detailStore'
 import { useSelectedSession } from '@renderer/stores/sessionsStore'
@@ -15,10 +16,10 @@ export function SessionAskBar(): React.JSX.Element {
   }
 
   return (
-    <div className="fixed right-0 bottom-6 left-0 px-6">
-      <div
+    <div className="fixed right-0 bottom-6 left-0">
+      <ContentContainer
         className={cn(
-          'mx-auto flex max-w-2xl items-center gap-3 rounded-full',
+          'flex items-center gap-3 rounded-full',
           'border border-neutral-800 bg-neutral-950 px-5 py-3'
         )}
       >
@@ -47,7 +48,7 @@ export function SessionAskBar(): React.JSX.Element {
         >
           <ArrowUpIcon className="h-4 w-4" />
         </Button>
-      </div>
+      </ContentContainer>
     </div>
   )
 }
