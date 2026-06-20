@@ -1,0 +1,39 @@
+import { create } from 'zustand'
+import { mockSessions } from '@renderer/data/mockSessions'
+import type { MeetingSession } from '@renderer/types/meeting'
+
+type SessionsState = {
+  sessions: MeetingSession[]
+  selectedSessionId: string | null
+  selectSession: (id: string) => void
+  clearSelection: () => void
+  deleteSession: (id: string) => void
+  exportSession: (id: string) => void
+}
+
+export const useSessionsStore = create<SessionsState>((set, get) => ({
+  sessions: mockSessions,
+  selectedSessionId: null,
+  selectSession: (id) => set({ selectedSessionId: id }),
+  clearSelection: () => set({ selectedSessionId: null }),
+  deleteSession: (id) => {
+    const { selectedSessionId } = get()
+
+    set((state) => ({
+      sessions: state.sessions.filter((session) => session.id !== id),
+      selectedSessionId: selectedSessionId === id ? null : selectedSessionId
+    }))
+  },
+  exportSession: (id) => {
+    const session = get().sessions.find((item) => item.id === id)
+
+    console.log('Export session', session?.title ?? id)
+  }
+}))
+
+export function useSelectedSession(): MeetingSession | undefined {
+  const sessions = useSessionsStore((state) => state.sessions)
+  const selectedSessionId = useSessionsStore((state) => state.selectedSessionId)
+
+  return sessions.find((session) => session.id === selectedSessionId)
+}

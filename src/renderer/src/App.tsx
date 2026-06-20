@@ -1,37 +1,11 @@
-import { H1Icon } from '@heroicons/react/16/solid'
-import Versions from './components/Versions'
-import { Button } from '@headlessui/react'
+import { SessionDetail } from '@renderer/components/SessionDetail'
+import { SessionList } from '@renderer/components/SessionList'
+import { useSessionsStore } from '@renderer/stores/sessionsStore'
 
 function App(): React.JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+  const selectedSessionId = useSessionsStore((state) => state.selectedSessionId)
 
-  return (
-    <div className="flex h-screen flex-col items-center justify-center">
-      <div className="text-2xl font-bold">Meetify</div>
-      <div className="text">
-        <H1Icon className="h-10 w-10" />
-        <Button className="rounded-md bg-blue-500 p-2 text-white">Click me</Button>
-        Build an Electron app with <span className="react">React</span>
-        &nbsp;and <span className="ts">TypeScript</span>
-      </div>
-      <p className="tip">
-        Please try pressing <code>F12</code> to open the devTool
-      </p>
-      <div className="actions">
-        <div className="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">
-            Documentation
-          </a>
-        </div>
-        <div className="action">
-          <a target="_blank" rel="noreferrer" onClick={ipcHandle}>
-            Send IPC
-          </a>
-        </div>
-      </div>
-      <Versions></Versions>
-    </div>
-  )
+  return selectedSessionId ? <SessionDetail /> : <SessionList />
 }
 
 export default App
