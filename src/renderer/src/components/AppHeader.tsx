@@ -11,6 +11,7 @@ import {
   useCanGoForward,
   useNavigationStore
 } from '@renderer/stores/navigationStore'
+import { useSettingsStore } from '@renderer/stores/settingsStore'
 
 const isMac = window.api.platform === 'darwin'
 
@@ -19,6 +20,7 @@ export function AppHeader(): React.JSX.Element {
   const canGoForward = useCanGoForward()
   const goBack = useNavigationStore((state) => state.goBack)
   const goForward = useNavigationStore((state) => state.goForward)
+  const openSettings = useSettingsStore((state) => state.openSettings)
 
   return (
     <header
@@ -67,6 +69,7 @@ export function AppHeader(): React.JSX.Element {
           <Squares2X2Icon className="h-4 w-4" />
         </Button>
         <Button
+          onClick={openSettings}
           className={cn(
             'rounded p-2 text-neutral-400 transition-colors hover:text-white',
             'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600'

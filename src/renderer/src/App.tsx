@@ -1,4 +1,5 @@
 import { AppHeader } from '@renderer/components/AppHeader'
+import { SettingsModal } from '@renderer/components/settings/SettingsModal'
 import { SessionDetail } from '@renderer/components/SessionDetail'
 import { SessionList } from '@renderer/components/SessionList'
 import { useSessionsStore } from '@renderer/stores/sessionsStore'
@@ -12,6 +13,7 @@ function App(): React.JSX.Element {
       <main className="min-h-0 flex-1 overflow-hidden">
         {selectedSessionId ? <SessionDetail /> : <SessionList />}
       </main>
+      <SettingsModal />
     </div>
   )
 }
