@@ -1,10 +1,10 @@
-import Versions from './components/Versions'
+import Versions from './components/Versions';
 
 function App(): React.JSX.Element {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping');
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
+    <div className="flex h-screen flex-col items-center justify-center">
       <div className="text-2xl font-bold">Meetify</div>
       <div className="text">
         Build an Electron app with <span className="react">React</span>
@@ -27,7 +27,7 @@ function App(): React.JSX.Element {
       </div>
       <Versions></Versions>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
