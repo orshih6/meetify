@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { mockSessions } from '@renderer/data/mockSessions'
+import { useNavigationStore } from '@renderer/stores/navigationStore'
 import type { MeetingSession } from '@renderer/types/meeting'
 
 type SessionsState = {
@@ -14,8 +15,8 @@ type SessionsState = {
 export const useSessionsStore = create<SessionsState>((set, get) => ({
   sessions: mockSessions,
   selectedSessionId: null,
-  selectSession: (id) => set({ selectedSessionId: id }),
-  clearSelection: () => set({ selectedSessionId: null }),
+  selectSession: (id) => useNavigationStore.getState().navigateTo(id),
+  clearSelection: () => useNavigationStore.getState().navigateTo(null),
   deleteSession: (id) => {
     const { selectedSessionId } = get()
 

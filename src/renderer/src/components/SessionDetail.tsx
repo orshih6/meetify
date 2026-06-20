@@ -21,14 +21,14 @@ export function SessionDetail(): React.JSX.Element {
 
   if (!session) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black text-neutral-500">
+      <div className="flex h-full items-center justify-center bg-black text-neutral-500">
         <ContentContainer>Session not found.</ContentContainer>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white">
+    <div className="flex h-full flex-col bg-black text-white">
       <div className="flex-1 overflow-y-auto">
         <ContentContainer className="pb-28">
           <SessionDetailHeader session={session} />

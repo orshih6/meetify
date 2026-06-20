@@ -9,7 +9,7 @@ export function SessionList(): React.JSX.Element {
   const groups = groupSessionsByDate(sessions)
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-black">
+    <div className="h-full overflow-y-auto bg-black">
       <ContentContainer className="pb-8">
         {groups.map((group, index) => (
           <SessionDateGroup
