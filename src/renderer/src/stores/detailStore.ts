@@ -1,8 +1,8 @@
 import { create } from 'zustand'
 
-export type DetailTab = 'summary' | 'transcript' | 'usage'
+export type DetailTab = 'summary' | 'transcript'
 
-export const DETAIL_TABS: DetailTab[] = ['summary', 'transcript', 'usage']
+export const DETAIL_TABS: DetailTab[] = ['summary', 'transcript']
 
 type DetailState = {
   activeTab: DetailTab

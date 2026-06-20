@@ -1,9 +1,14 @@
+export type TranscriptEntry = {
+  speaker: string
+  time: string
+  text: string
+}
+
 export type MeetingSession = {
   id: string
   title: string
   startedAt: Date
   durationSeconds: number
-  transcript?: string
-  followUpDraft?: string
   summary?: string
+  transcript?: TranscriptEntry[]
 }

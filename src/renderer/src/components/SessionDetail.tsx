@@ -4,12 +4,7 @@ import { SessionDetailHeader } from '@renderer/components/detail/SessionDetailHe
 import { SessionDetailTabs } from '@renderer/components/detail/SessionDetailTabs'
 import { SummaryPanel } from '@renderer/components/detail/SummaryPanel'
 import { TranscriptPanel } from '@renderer/components/detail/TranscriptPanel'
-import { UsagePanel } from '@renderer/components/detail/UsagePanel'
-import {
-  detailTabToIndex,
-  indexToDetailTab,
-  useDetailStore
-} from '@renderer/stores/detailStore'
+import { detailTabToIndex, indexToDetailTab, useDetailStore } from '@renderer/stores/detailStore'
 import { useSelectedSession } from '@renderer/stores/sessionsStore'
 import { useEffect } from 'react'
 
@@ -48,9 +43,6 @@ export function SessionDetail(): React.JSX.Element {
             </TabPanel>
             <TabPanel unmount={false}>
               <TranscriptPanel session={session} />
-            </TabPanel>
-            <TabPanel unmount={false}>
-              <UsagePanel session={session} />
             </TabPanel>
           </TabPanels>
         </TabGroup>
