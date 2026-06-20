@@ -1,13 +1,27 @@
-import { Button } from '@headlessui/react'
-import { ChevronLeftIcon, DocumentTextIcon } from '@heroicons/react/16/solid'
-import { DurationBadge } from '@renderer/components/DurationBadge'
-import { formatFullDate, formatSessionTime } from '@renderer/lib/format'
-import { cn } from '@renderer/lib/utils'
-import { useSelectedSession, useSessionsStore } from '@renderer/stores/sessionsStore'
+import { TabGroup, TabPanel, TabPanels } from '@headlessui/react'
+import { SessionAskBar } from '@renderer/components/detail/SessionAskBar'
+import { SessionDetailHeader } from '@renderer/components/detail/SessionDetailHeader'
+import { SessionDetailTabs } from '@renderer/components/detail/SessionDetailTabs'
+import { SummaryPanel } from '@renderer/components/detail/SummaryPanel'
+import { TranscriptPanel } from '@renderer/components/detail/TranscriptPanel'
+import { UsagePanel } from '@renderer/components/detail/UsagePanel'
+import {
+  detailTabToIndex,
+  indexToDetailTab,
+  useDetailStore
+} from '@renderer/stores/detailStore'
+import { useSelectedSession } from '@renderer/stores/sessionsStore'
+import { useEffect } from 'react'
 
 export function SessionDetail(): React.JSX.Element {
   const session = useSelectedSession()
-  const clearSelection = useSessionsStore((state) => state.clearSelection)
+  const activeTab = useDetailStore((state) => state.activeTab)
+  const setActiveTab = useDetailStore((state) => state.setActiveTab)
+  const resetDetail = useDetailStore((state) => state.resetDetail)
+
+  useEffect(() => {
+    return () => resetDetail()
+  }, [resetDetail])
 
   if (!session) {
     return (
@@ -18,39 +32,31 @@ export function SessionDetail(): React.JSX.Element {
   }
 
   return (
-    <div className="min-h-screen overflow-y-auto bg-black px-6 pb-8 text-white">
-      <Button
-        onClick={clearSelection}
-        className={cn(
-          'mt-6 flex items-center gap-1 rounded-lg py-2 text-sm text-neutral-400',
-          'transition-colors hover:text-white',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600'
-        )}
-      >
-        <ChevronLeftIcon className="h-4 w-4" />
-        Back
-      </Button>
+    <div className="flex min-h-screen flex-col bg-black text-white">
+      <div className="flex-1 overflow-y-auto px-6 pb-28">
+        <SessionDetailHeader session={session} />
 
-      <header className="mt-6">
-        <h1 className="text-2xl font-semibold">{session.title}</h1>
-        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-neutral-500">
-          <span>{formatFullDate(session.startedAt)}</span>
-          <span>{formatSessionTime(session.startedAt)}</span>
-          <DurationBadge durationSeconds={session.durationSeconds} />
-        </div>
-      </header>
+        <TabGroup
+          selectedIndex={detailTabToIndex(activeTab)}
+          onChange={(index) => setActiveTab(indexToDetailTab(index))}
+        >
+          <SessionDetailTabs session={session} />
 
-      <section className="mt-10">
-        <h2 className="text-sm font-medium text-neutral-400">Transcript</h2>
-        {session.transcript ? (
-          <p className="mt-4 whitespace-pre-wrap text-neutral-300">{session.transcript}</p>
-        ) : (
-          <div className="mt-6 flex flex-col items-center justify-center rounded-lg border border-neutral-800 py-16 text-neutral-500">
-            <DocumentTextIcon className="mb-3 h-8 w-8 text-neutral-600" />
-            <p className="text-sm">Transcript will appear here</p>
-          </div>
-        )}
-      </section>
+          <TabPanels>
+            <TabPanel unmount={false}>
+              <SummaryPanel session={session} />
+            </TabPanel>
+            <TabPanel unmount={false}>
+              <TranscriptPanel session={session} />
+            </TabPanel>
+            <TabPanel unmount={false}>
+              <UsagePanel session={session} />
+            </TabPanel>
+          </TabPanels>
+        </TabGroup>
+      </div>
+
+      <SessionAskBar />
     </div>
   )
 }

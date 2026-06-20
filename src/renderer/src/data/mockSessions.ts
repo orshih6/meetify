@@ -1,5 +1,13 @@
 import type { MeetingSession } from '@renderer/types/meeting'
 
+export const DEFAULT_FOLLOW_UP_DRAFT = `Hi team,
+
+Thanks for the conversation today.
+
+I will follow up if anything else is needed.
+
+Best,`
+
 function session(
   id: string,
   title: string,
@@ -14,7 +22,8 @@ function session(
     id,
     title,
     startedAt: new Date(year, month - 1, day, hours, minutes),
-    durationSeconds
+    durationSeconds,
+    followUpDraft: DEFAULT_FOLLOW_UP_DRAFT
   }
 }
 

@@ -42,6 +42,14 @@ export function formatFullDate(date: Date): string {
   })
 }
 
+export function formatDetailDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
 export type SessionDateGroup = {
   label: string
   sessions: MeetingSession[]

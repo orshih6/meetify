@@ -4,4 +4,6 @@ export type MeetingSession = {
   startedAt: Date
   durationSeconds: number
   transcript?: string
+  followUpDraft?: string
+  summary?: string
 }
