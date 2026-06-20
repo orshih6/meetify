@@ -74,8 +74,6 @@ export function groupSessionsByDate(
 
   return [...groups.entries()].map(([label, groupedSessions]) => ({
     label,
-    sessions: groupedSessions.sort(
-      (a, b) => b.startedAt.getTime() - a.startedAt.getTime()
-    )
+    sessions: groupedSessions.sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())
   }))
 }

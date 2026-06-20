@@ -1,9 +1,5 @@
 import { Button, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import {
-  ArrowDownTrayIcon,
-  EllipsisHorizontalIcon,
-  TrashIcon
-} from '@heroicons/react/16/solid'
+import { ArrowDownTrayIcon, EllipsisHorizontalIcon, TrashIcon } from '@heroicons/react/16/solid'
 import { DurationBadge } from '@renderer/components/DurationBadge'
 import { formatSessionTime } from '@renderer/lib/format'
 import { cn } from '@renderer/lib/utils'

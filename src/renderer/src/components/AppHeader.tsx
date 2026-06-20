@@ -6,11 +6,7 @@ import {
   Squares2X2Icon
 } from '@heroicons/react/16/solid'
 import { cn } from '@renderer/lib/utils'
-import {
-  useCanGoBack,
-  useCanGoForward,
-  useNavigationStore
-} from '@renderer/stores/navigationStore'
+import { useCanGoBack, useCanGoForward, useNavigationStore } from '@renderer/stores/navigationStore'
 import { useSettingsStore } from '@renderer/stores/settingsStore'
 
 const isMac = window.api.platform === 'darwin'
@@ -29,12 +25,7 @@ export function AppHeader(): React.JSX.Element {
         'border-b border-neutral-900/50 bg-black px-4'
       )}
     >
-      <div
-        className={cn(
-          'app-header-no-drag flex items-center gap-0.5',
-          isMac && 'pl-[72px]'
-        )}
-      >
+      <div className={cn('app-header-no-drag flex items-center gap-0.5', isMac && 'pl-[72px]')}>
         <Button
           onClick={goBack}
           disabled={!canGoBack}

@@ -6,7 +6,10 @@ type DurationBadgeProps = {
   className?: string
 }
 
-export function DurationBadge({ durationSeconds, className }: DurationBadgeProps): React.JSX.Element {
+export function DurationBadge({
+  durationSeconds,
+  className
+}: DurationBadgeProps): React.JSX.Element {
   return (
     <span
       className={cn(

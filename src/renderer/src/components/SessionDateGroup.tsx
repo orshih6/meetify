@@ -15,12 +15,7 @@ export function SessionDateGroup({
 }: SessionDateGroupProps): React.JSX.Element {
   return (
     <section>
-      <h2
-        className={cn(
-          'pb-2 text-sm text-neutral-500',
-          isFirst ? 'pt-6' : 'pt-8'
-        )}
-      >
+      <h2 className={cn('pb-2 text-sm text-neutral-500', isFirst ? 'pt-6' : 'pt-8')}>
         {group.label}
       </h2>
       <ul className="flex flex-col">

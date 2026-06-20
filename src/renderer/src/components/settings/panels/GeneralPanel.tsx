@@ -7,11 +7,7 @@ export function GeneralPanel(): React.JSX.Element {
       <p className="mt-1 text-sm text-neutral-500">Manage your Meetify preferences.</p>
 
       <div className="mt-6 space-y-4">
-        <SettingsField
-          label="Theme"
-          options={['Dark', 'Light', 'System']}
-          defaultValue="Dark"
-        />
+        <SettingsField label="Theme" options={['Dark', 'Light', 'System']} defaultValue="Dark" />
         <SettingsField
           label="Language"
           options={['English', 'Spanish', 'French']}
