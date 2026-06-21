@@ -11,6 +11,7 @@ import {
 } from '@mastra/observability'
 import { weatherWorkflow } from './workflows/weather-workflow'
 import { weatherAgent } from './agents/weather-agent'
+import { chatRoute } from '@mastra/ai-sdk'
 
 export const mastra = new Mastra({
   workflows: { weatherWorkflow },
@@ -42,5 +43,17 @@ export const mastra = new Mastra({
         ]
       }
     }
-  })
+  }),
+  server: {
+    cors: {
+      origin: '*', // Restrict this to your app's origin in production
+      allowMethods: ['*'],
+      allowHeaders: ['*']
+    },
+    apiRoutes: [
+      chatRoute({
+        path: '/chat/:agentId'
+      })
+    ]
+  }
 })

@@ -6,7 +6,6 @@ import { useSessionsStore } from '@renderer/stores/sessionsStore'
 
 function App(): React.JSX.Element {
   const selectedSessionId = useSessionsStore((state) => state.selectedSessionId)
-
   return (
     <div className="flex h-screen flex-col bg-black">
       <AppHeader />
