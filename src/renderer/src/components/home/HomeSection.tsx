@@ -5,7 +5,7 @@ import { cn } from '@renderer/lib/utils'
 import { useHomeStore } from '@renderer/stores/homeStore'
 import { useEffect, useState } from 'react'
 
-export function HomeSection(): React.JSX.Element {
+export function HomeSection() {
   const isDetectable = useHomeStore((state) => state.isDetectable)
   const isRecording = useHomeStore((state) => state.isRecording)
   const isStarting = useHomeStore((state) => state.isStarting)

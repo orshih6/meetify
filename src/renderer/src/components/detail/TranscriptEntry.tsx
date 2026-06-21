@@ -4,7 +4,7 @@ type TranscriptEntryProps = {
   entry: TranscriptEntryType
 }
 
-export function TranscriptEntry({ entry }: TranscriptEntryProps): React.JSX.Element {
+export function TranscriptEntry({ entry }: TranscriptEntryProps) {
   return (
     <div>
       <div className="text-sm text-neutral-500">

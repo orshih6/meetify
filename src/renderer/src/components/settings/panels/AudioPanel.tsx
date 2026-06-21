@@ -1,7 +1,7 @@
 import { SettingsField } from '@renderer/components/settings/SettingsField'
 import { InformationCircleIcon } from '@heroicons/react/16/solid'
 
-export function AudioPanel(): React.JSX.Element {
+export function AudioPanel() {
   return (
     <div className="space-y-8">
       <section>

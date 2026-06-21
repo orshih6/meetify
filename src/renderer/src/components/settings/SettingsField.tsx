@@ -17,7 +17,7 @@ export function SettingsField({
   defaultValue,
   placeholder = 'Select',
   className
-}: SettingsFieldProps): React.JSX.Element {
+}: SettingsFieldProps) {
   const [selected, setSelected] = useState(defaultValue ?? '')
 
   return (

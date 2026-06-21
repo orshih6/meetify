@@ -11,7 +11,7 @@ const STATE_TO_LABEL_MAP: Record<string, string> = {
   'output-error': 'Error'
 }
 
-export default function Chat(): React.JSX.Element {
+export default function Chat() {
   const [input, setInput] = useState('')
 
   const { messages, sendMessage } = useChat({

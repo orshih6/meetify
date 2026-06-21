@@ -9,7 +9,7 @@ import { detailTabToIndex, indexToDetailTab, useDetailStore } from '@renderer/st
 import { useSelectedSession } from '@renderer/stores/sessionsStore'
 import { useEffect } from 'react'
 
-export function SessionDetail(): React.JSX.Element {
+export function SessionDetail() {
   const session = useSelectedSession()
   const activeTab = useDetailStore((state) => state.activeTab)
   const setActiveTab = useDetailStore((state) => state.setActiveTab)

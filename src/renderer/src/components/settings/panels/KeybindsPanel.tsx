@@ -7,7 +7,7 @@ const KEYBINDS = [
   { action: 'Ask about meeting', keys: 'Cmd + K' }
 ]
 
-export function KeybindsPanel(): React.JSX.Element {
+export function KeybindsPanel() {
   return (
     <div>
       <h2 className="text-xl font-semibold text-white">Keybinds</h2>

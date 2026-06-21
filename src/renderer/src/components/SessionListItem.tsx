@@ -11,7 +11,7 @@ type SessionListItemProps = {
   onSelect: (id: string) => void
 }
 
-export function SessionListItem({ session, onSelect }: SessionListItemProps): React.JSX.Element {
+export function SessionListItem({ session, onSelect }: SessionListItemProps) {
   const deleteSession = useSessionsStore((state) => state.deleteSession)
   const exportSession = useSessionsStore((state) => state.exportSession)
 

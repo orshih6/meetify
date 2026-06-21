@@ -12,7 +12,7 @@ export function SessionDateGroup({
   group,
   isFirst,
   onSelect
-}: SessionDateGroupProps): React.JSX.Element {
+}: SessionDateGroupProps) {
   return (
     <section>
       <h2 className={cn('pb-2 text-sm text-neutral-500', isFirst ? 'pt-6' : 'pt-8')}>

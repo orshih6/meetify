@@ -8,7 +8,7 @@ import { KeybindsPanel } from '@renderer/components/settings/panels/KeybindsPane
 import { cn } from '@renderer/lib/utils'
 import { useSettingsStore, type SettingsSection } from '@renderer/stores/settingsStore'
 
-function SettingsContent({ section }: { section: SettingsSection }): React.JSX.Element {
+function SettingsContent({ section }: { section: SettingsSection }) {
   switch (section) {
     case 'general':
       return <GeneralPanel />
@@ -23,7 +23,7 @@ function SettingsContent({ section }: { section: SettingsSection }): React.JSX.E
   }
 }
 
-export function SettingsModal(): React.JSX.Element {
+export function SettingsModal() {
   const isOpen = useSettingsStore((state) => state.isOpen)
   const activeSection = useSettingsStore((state) => state.activeSection)
   const closeSettings = useSettingsStore((state) => state.closeSettings)

@@ -1,4 +1,4 @@
-export function AboutPanel(): React.JSX.Element {
+export function AboutPanel() {
   return (
     <div>
       <h2 className="text-xl font-semibold text-white">About</h2>

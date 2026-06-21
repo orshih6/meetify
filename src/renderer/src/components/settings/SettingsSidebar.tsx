@@ -5,7 +5,7 @@ import { useSettingsStore } from '@renderer/stores/settingsStore'
 import { Button } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/16/solid'
 
-export function SettingsSidebar(): React.JSX.Element {
+export function SettingsSidebar() {
   const activeSection = useSettingsStore((state) => state.activeSection)
   const setActiveSection = useSettingsStore((state) => state.setActiveSection)
   const closeSettings = useSettingsStore((state) => state.closeSettings)

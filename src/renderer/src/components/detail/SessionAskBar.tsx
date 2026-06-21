@@ -5,7 +5,7 @@ import { cn } from '@renderer/lib/utils'
 import { useDetailStore } from '@renderer/stores/detailStore'
 import { useSelectedSession } from '@renderer/stores/sessionsStore'
 
-export function SessionAskBar(): React.JSX.Element {
+export function SessionAskBar() {
   const session = useSelectedSession()
   const askQuery = useDetailStore((state) => state.askQuery)
   const setAskQuery = useDetailStore((state) => state.setAskQuery)

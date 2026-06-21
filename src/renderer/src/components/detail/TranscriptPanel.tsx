@@ -5,7 +5,7 @@ type TranscriptPanelProps = {
   session: MeetingSession
 }
 
-export function TranscriptPanel({ session }: TranscriptPanelProps): React.JSX.Element {
+export function TranscriptPanel({ session }: TranscriptPanelProps) {
   if (!session.transcript?.length) {
     return (
       <section className="mt-8">

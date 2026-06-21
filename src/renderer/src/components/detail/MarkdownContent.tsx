@@ -2,7 +2,7 @@ type MarkdownContentProps = {
   content: string
 }
 
-function renderInline(text: string): React.ReactNode {
+function renderInline(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g)
 
   return parts.map((part, index) => {
@@ -26,7 +26,7 @@ function renderInline(text: string): React.ReactNode {
   })
 }
 
-export function MarkdownContent({ content }: MarkdownContentProps): React.JSX.Element {
+export function MarkdownContent({ content }: MarkdownContentProps) {
   const lines = content.trim().split('\n')
   const elements: React.JSX.Element[] = []
   let listItems: string[] = []

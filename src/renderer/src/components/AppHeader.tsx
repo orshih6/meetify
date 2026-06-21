@@ -11,7 +11,7 @@ import { useSettingsStore } from '@renderer/stores/settingsStore'
 
 const isMac = window.api.platform === 'darwin'
 
-export function AppHeader(): React.JSX.Element {
+export function AppHeader() {
   const canGoBack = useCanGoBack()
   const canGoForward = useCanGoForward()
   const goBack = useNavigationStore((state) => state.goBack)

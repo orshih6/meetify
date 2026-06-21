@@ -6,6 +6,6 @@ type SummaryPanelProps = {
   session: MeetingSession
 }
 
-export function SummaryPanel({ session }: SummaryPanelProps): React.JSX.Element {
+export function SummaryPanel({ session }: SummaryPanelProps) {
   return <MarkdownContent content={session.summary ?? DEFAULT_SUMMARY_MARKDOWN} />
 }

@@ -1,6 +1,6 @@
 import { SettingsField } from '@renderer/components/settings/SettingsField'
 
-export function AIProvidersPanel(): React.JSX.Element {
+export function AIProvidersPanel() {
   return (
     <div>
       <h2 className="text-xl font-semibold text-white">AI Providers</h2>

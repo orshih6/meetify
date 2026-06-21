@@ -8,6 +8,6 @@ type ContentContainerProps = {
 export function ContentContainer({
   children,
   className
-}: ContentContainerProps): React.JSX.Element {
+}: ContentContainerProps) {
   return <div className={cn('mx-auto w-full max-w-4xl px-6', className)}>{children}</div>
 }

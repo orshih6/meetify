@@ -13,7 +13,7 @@ type SessionDetailTabsProps = {
   session: MeetingSession
 }
 
-export function SessionDetailTabs({ session }: SessionDetailTabsProps): React.JSX.Element {
+export function SessionDetailTabs({ session }: SessionDetailTabsProps) {
   const activeTab = useDetailStore((state) => state.activeTab)
   const isTranscriptTab = activeTab === 'transcript'
   const copyLabel = isTranscriptTab ? 'Copy full transcript' : 'Copy full summary'

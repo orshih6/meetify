@@ -12,7 +12,7 @@ export function SettingsSectionButton({
   item,
   isActive,
   onSelect
-}: SettingsSectionButtonProps): React.JSX.Element {
+}: SettingsSectionButtonProps) {
   const Icon = item.icon
 
   return (

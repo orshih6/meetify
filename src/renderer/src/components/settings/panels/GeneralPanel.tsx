@@ -1,6 +1,6 @@
 import { SettingsField } from '@renderer/components/settings/SettingsField'
 
-export function GeneralPanel(): React.JSX.Element {
+export function GeneralPanel() {
   return (
     <div>
       <h2 className="text-xl font-semibold text-white">General</h2>

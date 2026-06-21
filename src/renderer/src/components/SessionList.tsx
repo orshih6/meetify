@@ -4,7 +4,7 @@ import { SessionDateGroup } from '@renderer/components/SessionDateGroup'
 import { groupSessionsByDate } from '@renderer/lib/format'
 import { useSessionsStore } from '@renderer/stores/sessionsStore'
 
-export function SessionList(): React.JSX.Element {
+export function SessionList() {
   const sessions = useSessionsStore((state) => state.sessions)
   const selectSession = useSessionsStore((state) => state.selectSession)
   const groups = groupSessionsByDate(sessions)
