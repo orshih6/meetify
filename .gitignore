@@ -6,3 +6,4 @@ out
 *.log*
 .mastra
 src/mastra/public
+.env
