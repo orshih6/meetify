@@ -8,11 +8,7 @@ type SettingsSectionButtonProps = {
   onSelect: () => void
 }
 
-export function SettingsSectionButton({
-  item,
-  isActive,
-  onSelect
-}: SettingsSectionButtonProps) {
+export function SettingsSectionButton({ item, isActive, onSelect }: SettingsSectionButtonProps) {
   const Icon = item.icon
 
   return (

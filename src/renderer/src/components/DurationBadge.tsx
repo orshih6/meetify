@@ -6,10 +6,7 @@ type DurationBadgeProps = {
   className?: string
 }
 
-export function DurationBadge({
-  durationSeconds,
-  className
-}: DurationBadgeProps) {
+export function DurationBadge({ durationSeconds, className }: DurationBadgeProps) {
   return (
     <span
       className={cn(

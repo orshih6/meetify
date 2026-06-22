@@ -7,7 +7,10 @@ export const SOURCE_LABELS: Record<TranscriptSource, string> = {
   interviewer: 'Them'
 }
 
-export const TRANSCRIPT_SOURCES = ['me', 'interviewer'] as const satisfies readonly TranscriptSource[]
+export const TRANSCRIPT_SOURCES = [
+  'me',
+  'interviewer'
+] as const satisfies readonly TranscriptSource[]
 
 export type StoredTranscriptEntry = SavedTranscriptEntry & {
   utteranceStartedAtMs: number

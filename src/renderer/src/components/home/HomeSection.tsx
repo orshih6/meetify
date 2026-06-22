@@ -40,9 +40,7 @@ function DetectableToggle() {
     <div className="flex items-center justify-between gap-4">
       <div>
         <p className="text-sm font-medium text-white">Auto-detect meetings</p>
-        <p className="mt-1 text-sm text-neutral-500">
-          Automatically detect when a meeting starts
-        </p>
+        <p className="mt-1 text-sm text-neutral-500">Automatically detect when a meeting starts</p>
       </div>
       <Switch
         checked={isDetectable}
@@ -131,7 +129,9 @@ function LiveTranscriptPanel() {
 
   return (
     <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-900/50 p-4">
-      <p className="text-xs font-medium tracking-wide text-neutral-500 uppercase">Live transcript</p>
+      <p className="text-xs font-medium tracking-wide text-neutral-500 uppercase">
+        Live transcript
+      </p>
       <p className="mt-2 text-sm leading-relaxed text-white">{liveTranscriptText}</p>
     </div>
   )

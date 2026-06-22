@@ -22,9 +22,7 @@ type TranscriptionErrorPayload = {
   message?: string
 }
 
-function onTranscriptionDelta(
-  callback: (payload: TranscriptionDeltaPayload) => void
-): () => void {
+function onTranscriptionDelta(callback: (payload: TranscriptionDeltaPayload) => void): () => void {
   const handler = (_event: IpcRendererEvent, payload: TranscriptionDeltaPayload): void => {
     callback(payload)
   }
@@ -115,8 +113,7 @@ const api = {
       onTranscriptionUtterance(callback),
     onUtteranceEnd: (callback: (payload: TranscriptionSourcePayload) => void): (() => void) =>
       onTranscriptionUtteranceEnd(callback),
-    onError: (callback: (message: string) => void): (() => void) =>
-      onTranscriptionError(callback),
+    onError: (callback: (message: string) => void): (() => void) => onTranscriptionError(callback),
     onClosed: (callback: () => void): (() => void) => {
       const handler = (): void => {
         callback()

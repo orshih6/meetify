@@ -137,10 +137,7 @@ async function prepare(): Promise<{ warning: string | null; sources: TranscriptS
     throw new Error('Microphone permission was denied.')
   }
 
-  const [mic, { stream: system, warning }] = await Promise.all([
-    captureMic(),
-    captureSystemAudio()
-  ])
+  const [mic, { stream: system, warning }] = await Promise.all([captureMic(), captureSystemAudio()])
   const sources: TranscriptSource[] = ['me', ...(system ? ['interviewer' as const] : [])]
 
   session = { mic, system, sources, warning }
@@ -158,9 +155,7 @@ function beginProcessing(onChunk: (source: TranscriptSource, pcm: Int16Array) =>
   silentGain.gain.value = 0
   silentGain.connect(audioContext.destination)
 
-  processors.push(
-    attachPcmProcessor(session.mic, 'me', audioContext, silentGain, onChunk)
-  )
+  processors.push(attachPcmProcessor(session.mic, 'me', audioContext, silentGain, onChunk))
 
   if (session.system) {
     processors.push(

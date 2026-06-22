@@ -1,7 +1,4 @@
-import {
-  audioStreamCapture,
-  type TranscriptSource
-} from '@renderer/lib/audioStreamCapture'
+import { audioStreamCapture, type TranscriptSource } from '@renderer/lib/audioStreamCapture'
 
 type TranscriptionEvent =
   | { type: 'delta'; source: TranscriptSource; delta: string }

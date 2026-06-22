@@ -63,11 +63,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
           if (event.type === 'delta') {
             return {
-              liveTranscriptState: appendDelta(
-                state.liveTranscriptState,
-                event.source,
-                event.delta
-              )
+              liveTranscriptState: appendDelta(state.liveTranscriptState, event.source, event.delta)
             }
           }
 
