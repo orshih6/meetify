@@ -1,6 +1,5 @@
 import { formatDuration } from '@renderer/lib/format'
-import type { TranscriptSource } from '@renderer/lib/audioStreamCapture'
-import type { SavedSessionTranscript, SavedTranscriptEntry } from '@renderer/types/meeting'
+import type { SavedSessionTranscript, SavedTranscriptEntry, TranscriptSource } from '@shared/ipc'
 
 export const SOURCE_LABELS: Record<TranscriptSource, string> = {
   me: 'Me',

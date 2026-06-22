@@ -1,5 +1,5 @@
 import { TranscriptEntry } from '@renderer/components/detail/TranscriptEntry'
-import { useSelectedSession } from '@renderer/stores/sessionsStore'
+import { useSelectedSession } from '@renderer/stores/sessionNavigationStore'
 
 export function TranscriptPanel() {
   const session = useSelectedSession()

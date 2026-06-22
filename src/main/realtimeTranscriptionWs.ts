@@ -19,7 +19,7 @@ export function buildTranscriptionUrl(apiKey: string): URL {
   return url
 }
 
-export function buildSessionUpdateEvent(): {
+export function buildSessionUpdateEvent(language?: string): {
   type: 'session.update'
   session: {
     type: 'transcription'
@@ -41,7 +41,7 @@ export function buildSessionUpdateEvent(): {
           format: { type: 'audio/pcm', rate: 24_000 },
           transcription: {
             model: TRANSCRIPTION_MODEL,
-            language: process.env.TRANSCRIPTION_LANGUAGE ?? 'en'
+            language: language ?? process.env.TRANSCRIPTION_LANGUAGE ?? 'en'
           },
           turn_detection: null
         }

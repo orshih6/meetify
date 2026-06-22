@@ -1,20 +1,18 @@
+import {
+  createRecordingPipeline,
+  getLiveDisplayText,
+  type RecordingPipeline
+} from '@renderer/lib/recording'
+import { useSessionCatalogStore } from '@renderer/stores/sessionCatalogStore'
+import { useSessionNavigationStore } from '@renderer/stores/sessionNavigationStore'
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
-import {
-  appendDelta,
-  buildSavedSessionTranscript,
-  createLiveTranscriptState,
-  finalizePartialOnEnd,
-  finalizeUtterance,
-  makeTranscriptFilename,
-  TRANSCRIPT_SOURCES,
-  type LiveTranscriptState
-} from '@renderer/lib/liveTranscript'
-import { realtimeTranscriptionService } from '@renderer/lib/realtimeTranscriptionService'
 
 function toErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback
 }
+
+const recordingPipeline: RecordingPipeline = createRecordingPipeline()
 
 type HomeState = {
   isDetectable: boolean
@@ -23,12 +21,15 @@ type HomeState = {
   isStopping: boolean
   recordingError: string | null
   recordingWarning: string | null
-  liveTranscriptState: LiveTranscriptState
   recordingStartedAt: number | null
+  liveTranscriptVersion: number
   toggleDetectable: () => void
   startRecording: () => Promise<void>
   stopRecording: () => Promise<void>
+  getLiveTranscriptText: () => string
 }
+
+let pipelineUnsubscribe: (() => void) | null = null
 
 export const useHomeStore = create<HomeState>((set, get) => ({
   isDetectable: false,
@@ -37,9 +38,13 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   isStopping: false,
   recordingError: null,
   recordingWarning: null,
-  liveTranscriptState: createLiveTranscriptState(),
   recordingStartedAt: null,
+  liveTranscriptVersion: 0,
+
+  getLiveTranscriptText: () => getLiveDisplayText(recordingPipeline.getTranscriptState()),
+
   toggleDetectable: () => set((state) => ({ isDetectable: !state.isDetectable })),
+
   startRecording: async () => {
     const { isRecording, isStarting } = get()
 
@@ -51,44 +56,39 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       isStarting: true,
       recordingError: null,
       recordingWarning: null,
-      liveTranscriptState: createLiveTranscriptState()
+      recordingStartedAt: null
+    })
+
+    pipelineUnsubscribe?.()
+    pipelineUnsubscribe = recordingPipeline.subscribe((event) => {
+      if (event.type === 'error') {
+        set({ recordingError: event.message })
+      }
+
+      if (event.type === 'delta' || event.type === 'utterance') {
+        set((state) => ({ liveTranscriptVersion: state.liveTranscriptVersion + 1 }))
+      }
+
+      if (event.type === 'closed') {
+        set({
+          recordingWarning: `Transcription stream closed (${event.source}).`
+        })
+      }
     })
 
     try {
-      const recordingStartedAt = Date.now()
-
-      const { warning } = await realtimeTranscriptionService.start((event) => {
-        set((state) => {
-          const startedAt = state.recordingStartedAt ?? recordingStartedAt
-
-          if (event.type === 'delta') {
-            return {
-              liveTranscriptState: appendDelta(state.liveTranscriptState, event.source, event.delta)
-            }
-          }
-
-          if (event.type === 'utterance') {
-            return {
-              liveTranscriptState: finalizeUtterance(
-                state.liveTranscriptState,
-                event.source,
-                event.text,
-                startedAt
-              )
-            }
-          }
-
-          return state
-        })
-      })
+      const startedAt = Date.now()
+      const { warning } = await recordingPipeline.start()
 
       set({
         isRecording: true,
         isStarting: false,
-        recordingStartedAt,
+        recordingStartedAt: startedAt,
         recordingWarning: warning
       })
     } catch (error) {
+      pipelineUnsubscribe?.()
+      pipelineUnsubscribe = null
       set({
         isStarting: false,
         isRecording: false,
@@ -97,8 +97,9 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       })
     }
   },
+
   stopRecording: async () => {
-    const { isRecording, isStopping, recordingStartedAt } = get()
+    const { isRecording, isStopping } = get()
 
     if (!isRecording || isStopping) {
       return
@@ -107,44 +108,28 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     set({ isStopping: true, recordingError: null })
 
     try {
-      await realtimeTranscriptionService.stop()
+      const { payload, filename, saveError } = await recordingPipeline.stop()
 
-      const stoppedAt = Date.now()
-      let saveError: string | null = null
-      let nextLiveTranscriptState = get().liveTranscriptState
+      pipelineUnsubscribe?.()
+      pipelineUnsubscribe = null
 
-      if (recordingStartedAt !== null) {
-        for (const source of TRANSCRIPT_SOURCES) {
-          nextLiveTranscriptState = finalizePartialOnEnd(
-            nextLiveTranscriptState,
-            source,
-            recordingStartedAt
-          )
-        }
-
-        if (nextLiveTranscriptState.entries.length > 0) {
-          try {
-            const payload = buildSavedSessionTranscript(
-              nextLiveTranscriptState,
-              recordingStartedAt,
-              stoppedAt
-            )
-            const filename = makeTranscriptFilename(recordingStartedAt)
-            await window.api.transcript.save(payload, filename)
-          } catch (error) {
-            saveError = toErrorMessage(error, 'Failed to save transcript file.')
-          }
-        }
+      if (payload && filename) {
+        const session = useSessionCatalogStore
+          .getState()
+          .addSessionFromTranscript(filename, payload)
+        useSessionNavigationStore.getState().selectSession(session.id)
       }
 
-      set({
+      set((state) => ({
         isRecording: false,
         isStopping: false,
         recordingStartedAt: null,
-        liveTranscriptState: nextLiveTranscriptState,
+        liveTranscriptVersion: state.liveTranscriptVersion + 1,
         recordingError: saveError
-      })
+      }))
     } catch (error) {
+      pipelineUnsubscribe?.()
+      pipelineUnsubscribe = null
       set({
         isRecording: false,
         isStopping: false,
@@ -170,4 +155,10 @@ export function useHomeRecording() {
       stopRecording: state.stopRecording
     }))
   )
+}
+
+export function useLiveTranscriptDisplay(): string {
+  const version = useHomeStore((state) => state.liveTranscriptVersion)
+  void version
+  return useHomeStore.getState().getLiveTranscriptText()
 }

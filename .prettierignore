@@ -7,3 +7,14 @@ tsconfig.*.json
 build
 node_modules
 .agents
+**/*.md
+**/*.mdc
+**/*.json
+**/*.yaml
+**/*.yml
+**/*.toml
+**/*.lock
+**/*.lock.json
+**/*.lock.yaml
+**/*.lock.yml
+**/*.lock.toml

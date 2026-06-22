@@ -1,5 +1,3 @@
-import type { MeetingSession } from '@renderer/types/meeting'
-
 export function formatDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60
@@ -48,32 +46,4 @@ export function formatDetailDate(date: Date): string {
     month: 'short',
     day: 'numeric'
   })
-}
-
-export type SessionDateGroup = {
-  label: string
-  sessions: MeetingSession[]
-}
-
-export function groupSessionsByDate(
-  sessions: MeetingSession[],
-  now = new Date()
-): SessionDateGroup[] {
-  const groups = new Map<string, MeetingSession[]>()
-
-  for (const session of sessions) {
-    const label = formatDateGroup(session.startedAt, now)
-    const existing = groups.get(label)
-
-    if (existing) {
-      existing.push(session)
-    } else {
-      groups.set(label, [session])
-    }
-  }
-
-  return [...groups.entries()].map(([label, groupedSessions]) => ({
-    label,
-    sessions: groupedSessions.sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())
-  }))
 }

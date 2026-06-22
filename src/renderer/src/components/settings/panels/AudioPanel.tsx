@@ -1,7 +1,17 @@
 import { SettingsField } from '@renderer/components/settings/SettingsField'
+import {
+  LANGUAGE_SETTING_OPTIONS,
+  SPEECH_PROVIDER_OPTIONS,
+  useSettingsStore
+} from '@renderer/stores/settingsStore'
 import { InformationCircleIcon } from '@heroicons/react/16/solid'
 
 export function AudioPanel() {
+  const language = useSettingsStore((state) => state.language)
+  const setLanguage = useSettingsStore((state) => state.setLanguage)
+  const selectedLanguageLabel =
+    LANGUAGE_SETTING_OPTIONS.find((option) => option.value === language)?.label ?? 'English'
+
   return (
     <div className="space-y-8">
       <section>
@@ -11,8 +21,11 @@ export function AudioPanel() {
         </p>
         <SettingsField
           label="Speech Provider"
-          options={['Whisper', 'Deepgram', 'AssemblyAI']}
-          placeholder="Select Provider"
+          options={SPEECH_PROVIDER_OPTIONS.map((option) => option.label)}
+          value={
+            SPEECH_PROVIDER_OPTIONS.find((option) => option.enabled)?.label ?? 'OpenAI Realtime'
+          }
+          disabled
           className="mt-4"
         />
       </section>
@@ -21,13 +34,20 @@ export function AudioPanel() {
         <div className="grid gap-4 sm:grid-cols-2">
           <SettingsField
             label="Language"
-            options={['English', 'Spanish', 'French', 'German']}
-            defaultValue="English"
+            options={LANGUAGE_SETTING_OPTIONS.map((option) => option.label)}
+            value={selectedLanguageLabel}
+            onChange={(label) => {
+              const match = LANGUAGE_SETTING_OPTIONS.find((option) => option.label === label)
+              if (match) {
+                void setLanguage(match.value)
+              }
+            }}
           />
           <SettingsField
             label="Accent / Region"
             options={['United States', 'United Kingdom', 'Australia', 'Canada']}
             defaultValue="United States"
+            disabled
           />
         </div>
         <p className="mt-4 flex items-start gap-2 text-xs text-neutral-500">
@@ -43,6 +63,7 @@ export function AudioPanel() {
           label="Input Device"
           options={['Default Microphone', 'MacBook Pro Microphone', 'External USB Mic']}
           placeholder="Select Device"
+          disabled
           className="mt-4"
         />
       </section>

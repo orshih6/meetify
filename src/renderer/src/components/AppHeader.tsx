@@ -1,7 +1,7 @@
 import { Button } from '@headlessui/react'
 import { ChevronLeftIcon, ChevronRightIcon, Cog6ToothIcon } from '@heroicons/react/16/solid'
 import { cn } from '@renderer/lib/utils'
-import { useCanGoBack, useCanGoForward, useNavigationStore } from '@renderer/stores/navigationStore'
+import { useCanGoBack, useCanGoForward, useSessionNavigationStore } from '@renderer/stores/sessionNavigationStore'
 import { useSettingsStore } from '@renderer/stores/settingsStore'
 import type { ComponentType, SVGProps } from 'react'
 
@@ -36,8 +36,8 @@ function NavIconButton({ onClick, disabled, icon: Icon }: NavIconButtonProps) {
 export function AppHeader() {
   const canGoBack = useCanGoBack()
   const canGoForward = useCanGoForward()
-  const goBack = useNavigationStore((state) => state.goBack)
-  const goForward = useNavigationStore((state) => state.goForward)
+  const goBack = useSessionNavigationStore((state) => state.goBack)
+  const goForward = useSessionNavigationStore((state) => state.goForward)
   const openSettings = useSettingsStore((state) => state.openSettings)
 
   return (

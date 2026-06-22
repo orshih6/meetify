@@ -1,0 +1,4 @@
+export { createRecordingPipeline } from '@renderer/lib/recording/recordingPipeline'
+export type { RecordingEvent, RecordingPipeline } from '@renderer/lib/recording/recordingPipeline'
+export { getLiveDisplayText } from '@renderer/lib/recording/transcriptState'
+export type { LiveTranscriptState } from '@renderer/lib/recording/transcriptState'

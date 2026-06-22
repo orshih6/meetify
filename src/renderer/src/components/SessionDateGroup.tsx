@@ -1,6 +1,6 @@
 import { SessionListItem } from '@renderer/components/SessionListItem'
 import { cn } from '@renderer/lib/utils'
-import type { SessionDateGroup as SessionDateGroupType } from '@renderer/lib/format'
+import type { SessionDateGroup as SessionDateGroupType } from '@renderer/lib/sessions'
 
 type SessionDateGroupProps = {
   group: SessionDateGroupType

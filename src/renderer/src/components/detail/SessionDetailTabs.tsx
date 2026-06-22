@@ -1,13 +1,26 @@
 import { Button, Tab, TabList } from '@headlessui/react'
 import { DocumentDuplicateIcon } from '@heroicons/react/16/solid'
 import { DEFAULT_SUMMARY_MARKDOWN } from '@renderer/data/mockSessions'
-import { copyToClipboard } from '@renderer/lib/clipboard'
-import { formatTranscriptForCopy } from '@renderer/lib/transcript'
 import { cn } from '@renderer/lib/utils'
 import { useDetailStore } from '@renderer/stores/detailStore'
-import { useSelectedSession } from '@renderer/stores/sessionsStore'
+import { useSelectedSession } from '@renderer/stores/sessionNavigationStore'
+import type { TranscriptEntry } from '@renderer/types/meeting'
 
 const TABS = ['Summary', 'Transcript'] as const
+
+function formatTranscriptForCopy(entries: TranscriptEntry[] | undefined): string {
+  if (!entries?.length) {
+    return ''
+  }
+
+  return entries.map((entry) => `${entry.speaker} (${entry.time}): ${entry.text}`).join('\n\n')
+}
+
+async function copyToClipboard(text: string): Promise<void> {
+  if (text) {
+    await navigator.clipboard.writeText(text)
+  }
+}
 
 export function SessionDetailTabs() {
   const session = useSelectedSession()

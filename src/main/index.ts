@@ -3,7 +3,11 @@ import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { registerDisplayMediaHandler, registerRecordingHandlers } from './recording'
+import { registerDisplayMediaHandler } from './displayCapture'
+import { registerMicPermissionHandlers } from './micPermission'
+import { registerAudioPersistenceHandlers } from './audioPersistence'
+import { registerTranscriptPersistenceHandlers } from './transcriptPersistence'
+import { registerSettingsHandlers } from './settingsPersistence'
 import { registerTranscriptionHandlers } from './transcription'
 
 function loadEnvFile(): void {
@@ -99,7 +103,10 @@ app.whenReady().then(() => {
   ipcMain.on('ping', () => console.log('pong'))
 
   registerDisplayMediaHandler()
-  registerRecordingHandlers()
+  registerMicPermissionHandlers()
+  registerAudioPersistenceHandlers()
+  registerTranscriptPersistenceHandlers()
+  registerSettingsHandlers()
   registerTranscriptionHandlers()
 
   createWindow()

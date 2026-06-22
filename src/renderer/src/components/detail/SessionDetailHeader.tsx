@@ -1,5 +1,5 @@
 import { formatDetailDate } from '@renderer/lib/format'
-import { useSelectedSession } from '@renderer/stores/sessionsStore'
+import { useSelectedSession } from '@renderer/stores/sessionNavigationStore'
 
 export function SessionDetailHeader() {
   const session = useSelectedSession()

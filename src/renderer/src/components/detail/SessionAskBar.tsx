@@ -3,7 +3,7 @@ import { ArrowUpIcon } from '@heroicons/react/16/solid'
 import { ContentContainer } from '@renderer/components/ContentContainer'
 import { cn } from '@renderer/lib/utils'
 import { useDetailStore } from '@renderer/stores/detailStore'
-import { useSelectedSession } from '@renderer/stores/sessionsStore'
+import { useSelectedSession } from '@renderer/stores/sessionNavigationStore'
 
 export function SessionAskBar() {
   const session = useSelectedSession()

@@ -2,10 +2,21 @@ import { AppHeader } from '@renderer/components/AppHeader'
 import { SettingsModal } from '@renderer/components/settings/SettingsModal'
 import { SessionDetail } from '@renderer/components/SessionDetail'
 import { SessionList } from '@renderer/components/SessionList'
-import { useSessionsStore } from '@renderer/stores/sessionsStore'
+import { useSessionCatalogStore } from '@renderer/stores/sessionCatalogStore'
+import { useSessionNavigationStore } from '@renderer/stores/sessionNavigationStore'
+import { useSettingsStore } from '@renderer/stores/settingsStore'
+import { useEffect } from 'react'
 
 function App() {
-  const selectedSessionId = useSessionsStore((state) => state.selectedSessionId)
+  const selectedSessionId = useSessionNavigationStore((state) => state.selectedSessionId)
+  const loadCatalog = useSessionCatalogStore((state) => state.loadCatalog)
+  const loadSettings = useSettingsStore((state) => state.loadSettings)
+
+  useEffect(() => {
+    void loadCatalog()
+    void loadSettings()
+  }, [loadCatalog, loadSettings])
+
   return (
     <div className="flex h-screen flex-col bg-black">
       <AppHeader />

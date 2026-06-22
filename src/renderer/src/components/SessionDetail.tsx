@@ -6,7 +6,7 @@ import { SessionDetailTabs } from '@renderer/components/detail/SessionDetailTabs
 import { SummaryPanel } from '@renderer/components/detail/SummaryPanel'
 import { TranscriptPanel } from '@renderer/components/detail/TranscriptPanel'
 import { detailTabToIndex, indexToDetailTab, useDetailStore } from '@renderer/stores/detailStore'
-import { useSelectedSession } from '@renderer/stores/sessionsStore'
+import { useSelectedSession } from '@renderer/stores/sessionNavigationStore'
 
 export function SessionDetail() {
   const session = useSelectedSession()

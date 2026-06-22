@@ -1,17 +1,19 @@
 import { ContentContainer } from '@renderer/components/ContentContainer'
 import { HomeSection } from '@renderer/components/home/HomeSection'
 import { SessionDateGroup } from '@renderer/components/SessionDateGroup'
-import { groupSessionsByDate } from '@renderer/lib/format'
-import { useSessionsStore } from '@renderer/stores/sessionsStore'
+import { groupSessionsByDate } from '@renderer/lib/sessions'
+import { useSessionCatalogStore } from '@renderer/stores/sessionCatalogStore'
 
 export function SessionList() {
-  const sessions = useSessionsStore((state) => state.sessions)
+  const sessions = useSessionCatalogStore((state) => state.sessions)
+  const loadError = useSessionCatalogStore((state) => state.loadError)
   const groups = groupSessionsByDate(sessions)
 
   return (
     <div className="h-full overflow-y-auto bg-black">
       <ContentContainer className="pb-8">
         <HomeSection />
+        {loadError ? <p className="mt-4 text-xs text-red-400">{loadError}</p> : null}
         {groups.map((group, index) => (
           <SessionDateGroup key={group.label} group={group} isFirst={index === 0} />
         ))}

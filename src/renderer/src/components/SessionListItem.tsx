@@ -3,7 +3,8 @@ import { ArrowDownTrayIcon, EllipsisHorizontalIcon, TrashIcon } from '@heroicons
 import { DurationBadge } from '@renderer/components/DurationBadge'
 import { formatSessionTime } from '@renderer/lib/format'
 import { cn } from '@renderer/lib/utils'
-import { useSessionsStore } from '@renderer/stores/sessionsStore'
+import { useSessionCatalogStore } from '@renderer/stores/sessionCatalogStore'
+import { useSessionNavigationStore } from '@renderer/stores/sessionNavigationStore'
 import type { MeetingSession } from '@renderer/types/meeting'
 
 type SessionListItemProps = {
@@ -11,9 +12,9 @@ type SessionListItemProps = {
 }
 
 export function SessionListItem({ session }: SessionListItemProps) {
-  const selectSession = useSessionsStore((state) => state.selectSession)
-  const deleteSession = useSessionsStore((state) => state.deleteSession)
-  const exportSession = useSessionsStore((state) => state.exportSession)
+  const selectSession = useSessionNavigationStore((state) => state.selectSession)
+  const deleteSession = useSessionNavigationStore((state) => state.deleteSession)
+  const exportSession = useSessionCatalogStore((state) => state.exportSession)
 
   return (
     <div

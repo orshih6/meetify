@@ -1,9 +1,8 @@
 import { Button, Switch } from '@headlessui/react'
 import { MicrophoneIcon, StopIcon } from '@heroicons/react/16/solid'
 import { formatDuration } from '@renderer/lib/format'
-import { getLiveDisplayText } from '@renderer/lib/liveTranscript'
 import { cn } from '@renderer/lib/utils'
-import { useHomeRecording, useHomeStore } from '@renderer/stores/homeStore'
+import { useHomeRecording, useLiveTranscriptDisplay } from '@renderer/stores/homeStore'
 import { useEffect, useState } from 'react'
 
 function useRecordingElapsed(active: boolean, startedAt: number | null): number {
@@ -121,7 +120,7 @@ function RecordingControls() {
 }
 
 function LiveTranscriptPanel() {
-  const liveTranscriptText = useHomeStore((state) => getLiveDisplayText(state.liveTranscriptState))
+  const liveTranscriptText = useLiveTranscriptDisplay()
 
   if (!liveTranscriptText) {
     return null

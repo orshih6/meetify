@@ -1,5 +1,7 @@
 import { ipcMain, type WebContents } from 'electron'
 import WebSocket from 'ws'
+import { IPC_CHANNELS, type TranscriptionAudioPayload, type TranscriptSource } from '@shared/ipc'
+import { getAppSettings } from './settingsPersistence'
 import {
   appendAudioChunk,
   buildSessionUpdateEvent,
@@ -11,8 +13,6 @@ import {
 
 const COMMIT_INTERVAL_MS = 2000
 const CONNECT_TIMEOUT_MS = 15_000
-
-export type TranscriptSource = 'me' | 'interviewer'
 
 const ALL_SOURCES: TranscriptSource[] = ['me', 'interviewer']
 
@@ -80,6 +80,7 @@ async function createSession(
   apiKey: string
 ): Promise<void> {
   const ws = connectTranscriptionWebSocket(apiKey)
+  const language = getAppSettings().language
 
   let resolveReady!: () => void
   let rejectReady!: (error: Error) => void
@@ -111,7 +112,7 @@ async function createSession(
   }, CONNECT_TIMEOUT_MS)
 
   ws.on('open', () => {
-    ws.send(JSON.stringify(buildSessionUpdateEvent()))
+    ws.send(JSON.stringify(buildSessionUpdateEvent(language)))
   })
 
   ws.on('message', (raw) => {
@@ -122,7 +123,7 @@ async function createSession(
     } catch {
       const error = new Error('Failed to parse server event.')
       rejectReady(error)
-      sendToRenderer('transcription:error', { message: error.message, source })
+      sendToRenderer(IPC_CHANNELS.transcription.error, { message: error.message, source })
       cleanupSession(source)
       return
     }
@@ -145,7 +146,7 @@ async function createSession(
     }
 
     if (event.type === 'conversation.item.input_audio_transcription.delta' && event.delta) {
-      sendToRenderer('transcription:delta', { source, delta: event.delta })
+      sendToRenderer(IPC_CHANNELS.transcription.delta, { source, delta: event.delta })
       return
     }
 
@@ -153,7 +154,7 @@ async function createSession(
       event.type === 'conversation.item.input_audio_transcription.completed' &&
       event.transcript
     ) {
-      sendToRenderer('transcription:utterance', { source, text: event.transcript })
+      sendToRenderer(IPC_CHANNELS.transcription.utterance, { source, text: event.transcript })
       return
     }
 
@@ -162,7 +163,7 @@ async function createSession(
       event.type === 'error'
     ) {
       const message = event.error?.message ?? 'Transcription failed.'
-      sendToRenderer('transcription:error', { message, source })
+      sendToRenderer(IPC_CHANNELS.transcription.error, { message, source })
       rejectReady(new Error(message))
       cleanupSession(source)
     }
@@ -172,7 +173,7 @@ async function createSession(
     clearTimeout(connectTimeout)
     const error = err instanceof Error ? err : new Error(String(err))
     rejectReady(error)
-    sendToRenderer('transcription:error', { message: error.message, source })
+    sendToRenderer(IPC_CHANNELS.transcription.error, { message: error.message, source })
     cleanupSession(source)
   })
 
@@ -180,7 +181,7 @@ async function createSession(
     clearTimeout(connectTimeout)
 
     if (!session.closingIntentionally) {
-      sendToRenderer('transcription:closed', { source })
+      sendToRenderer(IPC_CHANNELS.transcription.closed, { source })
     }
 
     session.closingIntentionally = false
@@ -241,33 +242,30 @@ async function stopSessions(): Promise<void> {
 }
 
 export function registerTranscriptionHandlers(): void {
-  ipcMain.handle('transcription:start', async (event, sources: TranscriptSource[]) => {
+  ipcMain.handle(IPC_CHANNELS.transcription.start, async (event, sources: TranscriptSource[]) => {
     await startSessions(event.sender, sources)
   })
 
-  ipcMain.handle('transcription:stop', async () => {
+  ipcMain.handle(IPC_CHANNELS.transcription.stop, async () => {
     await stopSessions()
   })
 
-  ipcMain.on(
-    'transcription:audio',
-    (_event, payload: { source: TranscriptSource; pcm: Uint8Array }) => {
-      const session = active?.sessions.get(payload.source)
+  ipcMain.on(IPC_CHANNELS.transcription.audio, (_event, payload: TranscriptionAudioPayload) => {
+    const session = active?.sessions.get(payload.source)
 
-      if (!session) {
+    if (!session) {
+      return
+    }
+
+    void session.ready.then(() => {
+      const current = active?.sessions.get(payload.source)
+
+      if (!current || current.ws.readyState !== WebSocket.OPEN) {
         return
       }
 
-      void session.ready.then(() => {
-        const current = active?.sessions.get(payload.source)
-
-        if (!current || current.ws.readyState !== WebSocket.OPEN) {
-          return
-        }
-
-        appendAudioChunk(current.ws, payload.pcm)
-        current.hasPendingAudio = true
-      })
-    }
-  )
+      appendAudioChunk(current.ws, payload.pcm)
+      current.hasPendingAudio = true
+    })
+  })
 }
