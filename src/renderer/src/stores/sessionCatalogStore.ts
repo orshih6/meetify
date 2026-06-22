@@ -8,10 +8,7 @@ type SessionCatalogState = {
   isLoading: boolean
   loadError: string | null
   loadCatalog: () => Promise<void>
-  addSessionFromTranscript: (
-    filename: string,
-    payload: SavedSessionTranscript
-  ) => MeetingSession
+  addSessionFromTranscript: (filename: string, payload: SavedSessionTranscript) => MeetingSession
   removeSession: (id: string) => void
   exportSession: (id: string) => void
 }

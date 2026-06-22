@@ -1,7 +1,11 @@
 import { Button } from '@headlessui/react'
 import { ChevronLeftIcon, ChevronRightIcon, Cog6ToothIcon } from '@heroicons/react/16/solid'
 import { cn } from '@renderer/lib/utils'
-import { useCanGoBack, useCanGoForward, useSessionNavigationStore } from '@renderer/stores/sessionNavigationStore'
+import {
+  useCanGoBack,
+  useCanGoForward,
+  useSessionNavigationStore
+} from '@renderer/stores/sessionNavigationStore'
 import { useSettingsStore } from '@renderer/stores/settingsStore'
 import type { ComponentType, SVGProps } from 'react'
 

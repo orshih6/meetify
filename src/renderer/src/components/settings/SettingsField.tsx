@@ -28,11 +28,7 @@ export function SettingsField({
   return (
     <div className={className}>
       <p className="mb-2 text-xs tracking-wide text-neutral-500 uppercase">{label}</p>
-      <Listbox
-        value={selected}
-        onChange={(next) => onChange?.(next)}
-        disabled={disabled}
-      >
+      <Listbox value={selected} onChange={(next) => onChange?.(next)} disabled={disabled}>
         <div className="relative">
           <ListboxButton
             className={cn(

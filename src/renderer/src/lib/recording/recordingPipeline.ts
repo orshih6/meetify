@@ -1,8 +1,5 @@
 import { createAudioCapture } from '@renderer/lib/recording/audioCapture'
-import {
-  createDefaultRecordingApi,
-  type RecordingApi
-} from '@renderer/lib/recording/ipcAdapter'
+import { createDefaultRecordingApi, type RecordingApi } from '@renderer/lib/recording/ipcAdapter'
 import {
   appendDelta,
   buildSavedSessionTranscript,

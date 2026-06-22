@@ -75,8 +75,7 @@ const api = {
   transcript: {
     save: (payload: SavedSessionTranscript, filename: string): Promise<string> =>
       ipcRenderer.invoke(IPC_CHANNELS.transcript.save, payload, filename),
-    list: (): Promise<TranscriptListEntry[]> =>
-      ipcRenderer.invoke(IPC_CHANNELS.transcript.list),
+    list: (): Promise<TranscriptListEntry[]> => ipcRenderer.invoke(IPC_CHANNELS.transcript.list),
     load: (filename: string): Promise<SavedSessionTranscript | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.transcript.load, filename)
   },
