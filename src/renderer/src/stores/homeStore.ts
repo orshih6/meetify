@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { recordingService } from '@renderer/lib/recordingService'
+import { realtimeTranscriptionService } from '@renderer/lib/realtimeTranscriptionService'
 
 type HomeState = {
   isDetectable: boolean
@@ -8,7 +8,7 @@ type HomeState = {
   isStopping: boolean
   recordingError: string | null
   recordingWarning: string | null
-  lastSavedPath: string | null
+  liveTranscript: string
   recordingStartedAt: number | null
   toggleDetectable: () => void
   startRecording: () => Promise<void>
@@ -22,7 +22,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   isStopping: false,
   recordingError: null,
   recordingWarning: null,
-  lastSavedPath: null,
+  liveTranscript: '',
   recordingStartedAt: null,
   toggleDetectable: () => set((state) => ({ isDetectable: !state.isDetectable })),
   startRecording: async () => {
@@ -36,11 +36,13 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       isStarting: true,
       recordingError: null,
       recordingWarning: null,
-      lastSavedPath: null
+      liveTranscript: ''
     })
 
     try {
-      const { warning } = await recordingService.start()
+      const { warning } = await realtimeTranscriptionService.start((text) => {
+        set((state) => ({ liveTranscript: state.liveTranscript + text }))
+      })
 
       set({
         isRecording: true,
@@ -67,13 +69,12 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     set({ isStopping: true, recordingError: null })
 
     try {
-      const { filePath } = await recordingService.stop()
+      await realtimeTranscriptionService.stop()
 
       set({
         isRecording: false,
         isStopping: false,
-        recordingStartedAt: null,
-        lastSavedPath: filePath
+        recordingStartedAt: null
       })
     } catch (error) {
       set({

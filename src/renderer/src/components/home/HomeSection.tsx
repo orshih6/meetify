@@ -12,7 +12,7 @@ export function HomeSection() {
   const isStopping = useHomeStore((state) => state.isStopping)
   const recordingError = useHomeStore((state) => state.recordingError)
   const recordingWarning = useHomeStore((state) => state.recordingWarning)
-  const lastSavedPath = useHomeStore((state) => state.lastSavedPath)
+  const liveTranscript = useHomeStore((state) => state.liveTranscript)
   const recordingStartedAt = useHomeStore((state) => state.recordingStartedAt)
   const toggleDetectable = useHomeStore((state) => state.toggleDetectable)
   const startRecording = useHomeStore((state) => state.startRecording)
@@ -103,8 +103,13 @@ export function HomeSection() {
 
       {recordingError ? <p className="mt-3 text-xs text-red-400">{recordingError}</p> : null}
 
-      {lastSavedPath ? (
-        <p className="mt-3 text-xs text-neutral-500">Saved to {lastSavedPath}</p>
+      {liveTranscript ? (
+        <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-900/50 p-4">
+          <p className="text-xs font-medium tracking-wide text-neutral-500 uppercase">
+            Live transcript
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-white">{liveTranscript}</p>
+        </div>
       ) : null}
     </section>
   )
