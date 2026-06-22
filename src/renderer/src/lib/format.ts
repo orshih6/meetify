@@ -14,32 +14,6 @@ export function formatSessionTime(date: Date): string {
     .toLowerCase()
 }
 
-export function formatDateGroup(date: Date, now = new Date()): string {
-  const isSameDay =
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate()
-
-  if (isSameDay) {
-    return 'Today'
-  }
-
-  return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric'
-  })
-}
-
-export function formatFullDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  })
-}
-
 export function formatDetailDate(date: Date): string {
   return date.toLocaleDateString('en-US', {
     weekday: 'long',

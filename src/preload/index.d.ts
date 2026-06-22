@@ -21,7 +21,6 @@ declare global {
       platform: NodeJS.Platform
       recording: {
         requestMicPermission: () => Promise<boolean>
-        save: (buffer: ArrayBuffer, filename: string) => Promise<string>
       }
       session: {
         save: (payload: SavedSessionTranscript) => Promise<SessionSaveResult>

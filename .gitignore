@@ -7,3 +7,6 @@ out
 .env
 .mastra
 src/mastra/public
+mastra.db
+mastra.db-*
+*.duckdb.wal

@@ -1,7 +1,7 @@
 import type { ApiKeyStatus, AppSettings } from '@shared/ipc'
 import { create } from 'zustand'
 
-export type SettingsSection = 'general' | 'audio' | 'aiProviders' | 'keybinds' | 'about'
+export type SettingsSection = 'audio' | 'aiProviders' | 'keybinds' | 'about'
 
 const LANGUAGE_OPTIONS = [
   { label: 'English', value: 'en' },
@@ -43,7 +43,7 @@ export const LANGUAGE_SETTING_OPTIONS = LANGUAGE_OPTIONS
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   isOpen: false,
-  activeSection: 'general',
+  activeSection: 'audio',
   isLoaded: false,
   speechProvider: 'openai-realtime',
   language: 'en',

@@ -1,4 +1,3 @@
-import { SettingsField } from '@renderer/components/settings/SettingsField'
 import { SettingsSecretField } from '@renderer/components/settings/SettingsSecretField'
 import { useSettingsStore } from '@renderer/stores/settingsStore'
 import { useEffect } from 'react'
@@ -29,26 +28,16 @@ export function AIProvidersPanel() {
     <div>
       <h2 className="text-xl font-semibold text-white">AI Providers</h2>
       <p className="mt-1 text-sm text-neutral-500">
-        Configure the AI models used for summaries and meeting insights.
+        Configure the OpenAI API key used for transcription and meeting summaries.
       </p>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-6">
         <SettingsSecretField
           label="OpenAI API Key"
           statusLabel={apiKeyStatusLabel(apiKeyStatus.source, apiKeyStatus.configured)}
           placeholder="sk-..."
           onSave={saveOpenAiApiKey}
           onClear={clearOpenAiApiKey}
-        />
-        <SettingsField
-          label="Summary Provider"
-          options={['OpenAI', 'Anthropic', 'Google Gemini']}
-          placeholder="Select Provider"
-        />
-        <SettingsField
-          label="Model"
-          options={['GPT-4o', 'Claude Sonnet', 'Gemini Pro']}
-          placeholder="Select Model"
         />
       </div>
     </div>

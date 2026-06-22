@@ -1,4 +1,4 @@
-import { DEFAULT_SUMMARY_MARKDOWN } from '@renderer/data/mockSessions'
+import { DEFAULT_SUMMARY_MARKDOWN } from '@shared/summary/defaultSummary'
 import { MarkdownContent } from '@renderer/components/detail/MarkdownContent'
 import { useSelectedSession } from '@renderer/stores/sessionNavigationStore'
 

@@ -1,6 +1,6 @@
 import { Button, Tab, TabList } from '@headlessui/react'
 import { DocumentDuplicateIcon } from '@heroicons/react/16/solid'
-import { DEFAULT_SUMMARY_MARKDOWN } from '@renderer/data/mockSessions'
+import { DEFAULT_SUMMARY_MARKDOWN } from '@shared/summary/defaultSummary'
 import { cn } from '@renderer/lib/utils'
 import { useDetailStore } from '@renderer/stores/detailStore'
 import { useSelectedSession } from '@renderer/stores/sessionNavigationStore'

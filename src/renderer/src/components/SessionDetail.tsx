@@ -1,6 +1,5 @@
 import { TabGroup, TabPanel, TabPanels } from '@headlessui/react'
 import { ContentContainer } from '@renderer/components/ContentContainer'
-import { SessionAskBar } from '@renderer/components/detail/SessionAskBar'
 import { SessionDetailHeader } from '@renderer/components/detail/SessionDetailHeader'
 import { SessionDetailTabs } from '@renderer/components/detail/SessionDetailTabs'
 import { SummaryPanel } from '@renderer/components/detail/SummaryPanel'
@@ -34,7 +33,7 @@ export function SessionDetail() {
   return (
     <div className="flex h-full flex-col bg-black text-white">
       <div className="flex-1 overflow-y-auto">
-        <ContentContainer className="pb-28">
+        <ContentContainer className="pb-8">
           <SessionDetailHeader />
 
           <TabGroup
@@ -54,8 +53,6 @@ export function SessionDetail() {
           </TabGroup>
         </ContentContainer>
       </div>
-
-      <SessionAskBar />
     </div>
   )
 }

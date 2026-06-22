@@ -1,7 +1,6 @@
 export const IPC_CHANNELS = {
   recording: {
-    requestMicPermission: 'recording:request-mic-permission',
-    save: 'recording:save'
+    requestMicPermission: 'recording:request-mic-permission'
   },
   session: {
     save: 'session:save',

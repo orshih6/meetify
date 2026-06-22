@@ -72,9 +72,7 @@ const api = {
   platform: process.platform,
   recording: {
     requestMicPermission: (): Promise<boolean> =>
-      ipcRenderer.invoke(IPC_CHANNELS.recording.requestMicPermission),
-    save: (buffer: ArrayBuffer, filename: string): Promise<string> =>
-      ipcRenderer.invoke(IPC_CHANNELS.recording.save, new Uint8Array(buffer), filename)
+      ipcRenderer.invoke(IPC_CHANNELS.recording.requestMicPermission)
   },
   session: {
     save: (payload: SavedSessionTranscript): Promise<SessionSaveResult> =>

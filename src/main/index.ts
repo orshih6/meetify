@@ -1,11 +1,10 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { registerDisplayMediaHandler } from './displayCapture'
 import { registerMicPermissionHandlers } from './micPermission'
-import { registerAudioPersistenceHandlers } from './audioPersistence'
 import { initMastraStorage } from './mastraStorage'
 import { registerSessionHandlers } from './sessionHandlers'
 import { registerSummaryHandlers } from './summaryHandlers'
@@ -102,12 +101,8 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
   registerDisplayMediaHandler()
   registerMicPermissionHandlers()
-  registerAudioPersistenceHandlers()
   await initMastraStorage()
   registerSessionHandlers()
   registerSummaryHandlers()

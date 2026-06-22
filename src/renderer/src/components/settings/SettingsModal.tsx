@@ -3,15 +3,12 @@ import { SettingsSidebar } from '@renderer/components/settings/SettingsSidebar'
 import { AboutPanel } from '@renderer/components/settings/panels/AboutPanel'
 import { AIProvidersPanel } from '@renderer/components/settings/panels/AIProvidersPanel'
 import { AudioPanel } from '@renderer/components/settings/panels/AudioPanel'
-import { GeneralPanel } from '@renderer/components/settings/panels/GeneralPanel'
 import { KeybindsPanel } from '@renderer/components/settings/panels/KeybindsPanel'
 import { cn } from '@renderer/lib/utils'
 import { useSettingsStore, type SettingsSection } from '@renderer/stores/settingsStore'
 
 function SettingsContent({ section }: { section: SettingsSection }) {
   switch (section) {
-    case 'general':
-      return <GeneralPanel />
     case 'audio':
       return <AudioPanel />
     case 'aiProviders':

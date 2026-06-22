@@ -15,8 +15,6 @@ type SessionCatalogState = {
   addSessionFromSave: (sessionId: string, payload: SavedSessionTranscript) => MeetingSession
   requestSummary: (sessionId: string) => Promise<void>
   loadSessionDetail: (sessionId: string) => Promise<MeetingSession | null>
-  removeSession: (id: string) => void
-  exportSession: (id: string) => void
 }
 
 function mergeSession(existing: MeetingSession | undefined, next: MeetingSession): MeetingSession {
@@ -29,7 +27,7 @@ function mergeSession(existing: MeetingSession | undefined, next: MeetingSession
   }
 }
 
-export const useSessionCatalogStore = create<SessionCatalogState>((set, get) => ({
+export const useSessionCatalogStore = create<SessionCatalogState>((set) => ({
   sessions: [],
   isLoading: false,
   loadError: null,
@@ -94,16 +92,5 @@ export const useSessionCatalogStore = create<SessionCatalogState>((set, get) => 
     }))
 
     return session
-  },
-
-  removeSession: (id) => {
-    set((state) => ({
-      sessions: state.sessions.filter((session) => session.id !== id)
-    }))
-  },
-
-  exportSession: (id) => {
-    const session = get().sessions.find((item) => item.id === id)
-    console.log('Export session', session?.title ?? id)
   }
 }))
