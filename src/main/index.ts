@@ -1,8 +1,47 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { registerDisplayMediaHandler, registerRecordingHandlers } from './recording'
+import { registerTranscriptionHandlers } from './transcription'
+
+function loadEnvFile(): void {
+  const envPaths = [join(process.cwd(), '.env'), join(__dirname, '../../.env')]
+
+  for (const envPath of envPaths) {
+    if (!existsSync(envPath)) {
+      continue
+    }
+
+    const lines = readFileSync(envPath, 'utf8').split('\n')
+
+    for (const line of lines) {
+      const trimmed = line.trim()
+
+      if (!trimmed || trimmed.startsWith('#')) {
+        continue
+      }
+
+      const separatorIndex = trimmed.indexOf('=')
+
+      if (separatorIndex === -1) {
+        continue
+      }
+
+      const key = trimmed.slice(0, separatorIndex).trim()
+      const value = trimmed.slice(separatorIndex + 1).trim()
+
+      if (key && process.env[key] === undefined) {
+        process.env[key] = value
+      }
+    }
+
+    break
+  }
+}
+
+loadEnvFile()
 
 function createWindow(): void {
   // Create the browser window.
@@ -61,6 +100,7 @@ app.whenReady().then(() => {
 
   registerDisplayMediaHandler()
   registerRecordingHandlers()
+  registerTranscriptionHandlers()
 
   createWindow()
 
