@@ -9,6 +9,7 @@ import {
   saveMeetingSummary
 } from '../mastra/meetingRepository'
 import { getElectronMemoryStore } from './mastraStorage'
+import { getOpenAiApiKey } from './credentials'
 
 export function registerSummaryHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.summary.generate, async (_event, sessionId: string) => {
@@ -24,7 +25,10 @@ export function registerSummaryHandlers(): void {
       const transcript = await getMeetingTranscriptEntries(memory, sessionId)
       const formattedTranscript = formatTranscriptForSummary(transcript)
       const prompt = `Summarize the following meeting transcript:\n\n${formattedTranscript}`
-      const response = await meetingSummaryAgent.generate(prompt)
+      const apiKey = await getOpenAiApiKey()
+      const response = await meetingSummaryAgent.generate(prompt, {
+        model: { id: 'openai/gpt-5-mini', apiKey }
+      })
       const summary = response.text?.trim()
 
       if (!summary) {

@@ -65,6 +65,11 @@ export type SummaryGenerateResult = {
   summary: string
 }
 
+export type ApiKeyStatus = {
+  configured: boolean
+  source: 'settings' | 'env' | 'none'
+}
+
 export type AppSettings = {
   speechProvider: 'openai-realtime'
   language: string

@@ -23,5 +23,10 @@ export const IPC_CHANNELS = {
   settings: {
     get: 'settings:get',
     set: 'settings:set'
+  },
+  credentials: {
+    getStatus: 'credentials:get-status',
+    setOpenAiApiKey: 'credentials:set-openai-api-key',
+    clearOpenAiApiKey: 'credentials:clear-openai-api-key'
   }
 } as const

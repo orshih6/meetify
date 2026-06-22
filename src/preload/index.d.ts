@@ -1,5 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 import type {
+  ApiKeyStatus,
   AppSettings,
   SavedSessionTranscript,
   SessionListEntry,
@@ -42,6 +43,11 @@ declare global {
       settings: {
         get: () => Promise<AppSettings>
         set: (partial: Partial<AppSettings>) => Promise<AppSettings>
+      }
+      credentials: {
+        getStatus: () => Promise<ApiKeyStatus>
+        setOpenAiApiKey: (apiKey: string) => Promise<ApiKeyStatus>
+        clearOpenAiApiKey: () => Promise<ApiKeyStatus>
       }
     }
   }

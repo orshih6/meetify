@@ -9,6 +9,7 @@ import { registerAudioPersistenceHandlers } from './audioPersistence'
 import { initMastraStorage } from './mastraStorage'
 import { registerSessionHandlers } from './sessionHandlers'
 import { registerSummaryHandlers } from './summaryHandlers'
+import { registerCredentialsHandlers } from './credentialsHandlers'
 import { registerSettingsHandlers } from './settingsPersistence'
 import { registerTranscriptionHandlers } from './transcription'
 
@@ -111,6 +112,7 @@ app.whenReady().then(async () => {
   registerSessionHandlers()
   registerSummaryHandlers()
   registerSettingsHandlers()
+  registerCredentialsHandlers()
   registerTranscriptionHandlers()
 
   createWindow()

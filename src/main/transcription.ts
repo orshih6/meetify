@@ -2,6 +2,7 @@ import { ipcMain, type WebContents } from 'electron'
 import WebSocket from 'ws'
 import { IPC_CHANNELS, type TranscriptionAudioPayload, type TranscriptSource } from '@shared/ipc'
 import { getAppSettings } from './settingsPersistence'
+import { getOpenAiApiKey } from './credentials'
 import {
   appendAudioChunk,
   buildSessionUpdateEvent,
@@ -197,11 +198,7 @@ async function createSession(
 }
 
 async function startSessions(sender: WebContents, sources: TranscriptSource[]): Promise<void> {
-  const apiKey = process.env.OPENAI_API_KEY
-
-  if (!apiKey) {
-    throw new Error('OPENAI_API_KEY is not set.')
-  }
+  const apiKey = await getOpenAiApiKey()
 
   if (active) {
     throw new Error('Transcription is already active.')
