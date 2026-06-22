@@ -1,20 +1,23 @@
 const TARGET_SAMPLE_RATE = 24000
 
+export type TranscriptSource = 'me' | 'interviewer'
+
 export const SYSTEM_AUDIO_WARNING =
   'System audio unavailable — recording microphone only. Grant System Audio Recording permission (built app) or check Audio settings.'
 
-let streams: MediaStream[] = []
+type CaptureSession = {
+  mic: MediaStream
+  system: MediaStream | null
+  sources: TranscriptSource[]
+  warning: string | null
+}
+
+let session: CaptureSession | null = null
 let audioContext: AudioContext | null = null
-let processor: ScriptProcessorNode | null = null
+let processors: ScriptProcessorNode[] = []
 let silentGain: GainNode | null = null
 
 async function captureMic(): Promise<MediaStream> {
-  const granted = await window.api.recording.requestMicPermission()
-
-  if (!granted) {
-    throw new Error('Microphone permission was denied.')
-  }
-
   return navigator.mediaDevices.getUserMedia({ audio: true })
 }
 
@@ -44,14 +47,26 @@ async function captureSystemAudio(): Promise<{
   }
 }
 
-function mixStreams(inputs: MediaStream[], context: AudioContext): MediaStream {
-  const destination = context.createMediaStreamDestination()
+function attachPcmProcessor(
+  stream: MediaStream,
+  source: TranscriptSource,
+  context: AudioContext,
+  gain: GainNode,
+  onChunk: (source: TranscriptSource, pcm: Int16Array) => void
+): ScriptProcessorNode {
+  const streamSource = context.createMediaStreamSource(stream)
+  const processor = context.createScriptProcessor(4096, 1, 1)
 
-  for (const stream of inputs) {
-    context.createMediaStreamSource(stream).connect(destination)
+  processor.onaudioprocess = (event) => {
+    const channel = event.inputBuffer.getChannelData(0)
+    const resampled = resample(channel, context.sampleRate, TARGET_SAMPLE_RATE)
+    onChunk(source, floatTo16BitPcm(resampled))
   }
 
-  return destination.stream
+  streamSource.connect(processor)
+  processor.connect(gain)
+
+  return processor
 }
 
 function stopTracks(targets: MediaStream[]): void {
@@ -94,13 +109,18 @@ function floatTo16BitPcm(input: Float32Array): Int16Array {
 }
 
 function resetState(): void {
-  processor?.disconnect()
+  for (const processor of processors) {
+    processor.disconnect()
+  }
+
+  processors = []
   silentGain?.disconnect()
-  processor = null
   silentGain = null
 
-  stopTracks(streams)
-  streams = []
+  if (session) {
+    stopTracks([session.mic, ...(session.system ? [session.system] : [])])
+    session = null
+  }
 
   if (audioContext) {
     void audioContext.close()
@@ -108,37 +128,49 @@ function resetState(): void {
   }
 }
 
-async function start(onChunk: (pcm: Int16Array) => void): Promise<{ warning: string | null }> {
+async function prepare(): Promise<{ warning: string | null; sources: TranscriptSource[] }> {
   resetState()
 
-  const mic = await captureMic()
-  const { stream: system, warning } = await captureSystemAudio()
+  const granted = await window.api.recording.requestMicPermission()
 
-  streams = [mic, ...(system ? [system] : [])]
-
-  audioContext = new AudioContext()
-  const mixed = mixStreams(streams, audioContext)
-  const source = audioContext.createMediaStreamSource(mixed)
-
-  processor = audioContext.createScriptProcessor(4096, 1, 1)
-  processor.onaudioprocess = (event) => {
-    const channel = event.inputBuffer.getChannelData(0)
-    const resampled = resample(channel, audioContext!.sampleRate, TARGET_SAMPLE_RATE)
-    onChunk(floatTo16BitPcm(resampled))
+  if (!granted) {
+    throw new Error('Microphone permission was denied.')
   }
 
+  const [mic, { stream: system, warning }] = await Promise.all([
+    captureMic(),
+    captureSystemAudio()
+  ])
+  const sources: TranscriptSource[] = ['me', ...(system ? ['interviewer' as const] : [])]
+
+  session = { mic, system, sources, warning }
+
+  return { warning, sources }
+}
+
+function beginProcessing(onChunk: (source: TranscriptSource, pcm: Int16Array) => void): void {
+  if (!session) {
+    throw new Error('Audio capture is not prepared.')
+  }
+
+  audioContext = new AudioContext()
   silentGain = audioContext.createGain()
   silentGain.gain.value = 0
-
-  source.connect(processor)
-  processor.connect(silentGain)
   silentGain.connect(audioContext.destination)
 
-  return { warning }
+  processors.push(
+    attachPcmProcessor(session.mic, 'me', audioContext, silentGain, onChunk)
+  )
+
+  if (session.system) {
+    processors.push(
+      attachPcmProcessor(session.system, 'interviewer', audioContext, silentGain, onChunk)
+    )
+  }
 }
 
 function stop(): void {
   resetState()
 }
 
-export const audioStreamCapture = { start, stop }
+export const audioStreamCapture = { prepare, beginProcessing, stop }

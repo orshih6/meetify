@@ -12,51 +12,73 @@ import {
 const COMMIT_INTERVAL_MS = 2000
 const CONNECT_TIMEOUT_MS = 15_000
 
+export type TranscriptSource = 'me' | 'interviewer'
+
+const ALL_SOURCES: TranscriptSource[] = ['me', 'interviewer']
+
 type SessionState = {
+  source: TranscriptSource
   ws: WebSocket
-  sender: WebContents
   commitTimer: ReturnType<typeof setInterval> | null
   hasPendingAudio: boolean
   ready: Promise<void>
+  closingIntentionally: boolean
 }
 
-let session: SessionState | null = null
-let closingIntentionally = false
+type ActiveTranscription = {
+  sender: WebContents
+  sessions: Map<TranscriptSource, SessionState>
+}
+
+let active: ActiveTranscription | null = null
 
 function sendToRenderer(channel: string, payload: unknown): void {
-  if (session?.sender && !session.sender.isDestroyed()) {
-    session.sender.send(channel, payload)
+  if (active?.sender && !active.sender.isDestroyed()) {
+    active.sender.send(channel, payload)
   }
 }
 
-function cleanupSession(): void {
+function cleanupSession(source: TranscriptSource): void {
+  if (!active) {
+    return
+  }
+
+  const session = active.sessions.get(source)
+
   if (!session) {
     return
   }
 
-  const { ws, commitTimer } = session
-  session = null
-
-  if (commitTimer) {
-    clearInterval(commitTimer)
+  if (session.commitTimer) {
+    clearInterval(session.commitTimer)
   }
 
-  if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
-    ws.close()
+  if (session.ws.readyState === WebSocket.OPEN || session.ws.readyState === WebSocket.CONNECTING) {
+    session.ws.close()
+  }
+
+  active.sessions.delete(source)
+
+  if (active.sessions.size === 0) {
+    active = null
   }
 }
 
-async function startSession(sender: WebContents): Promise<void> {
-  const apiKey = process.env.OPENAI_API_KEY
-
-  if (!apiKey) {
-    throw new Error('OPENAI_API_KEY is not set.')
+function cleanupAllSessions(): void {
+  if (!active) {
+    return
   }
 
-  if (session) {
-    throw new Error('Transcription is already active.')
+  for (const source of [...active.sessions.keys()]) {
+    cleanupSession(source)
   }
+}
 
+async function createSession(
+  source: TranscriptSource,
+  sender: WebContents,
+  apiKey: string
+): Promise<void> {
   const ws = connectTranscriptionWebSocket(apiKey)
 
   let resolveReady!: () => void
@@ -68,17 +90,24 @@ async function startSession(sender: WebContents): Promise<void> {
     rejectReady = reject
   })
 
-  session = {
+  const session: SessionState = {
+    source,
     ws,
-    sender,
     commitTimer: null,
     hasPendingAudio: false,
-    ready
+    ready,
+    closingIntentionally: false
   }
 
+  if (!active) {
+    active = { sender, sessions: new Map() }
+  }
+
+  active.sessions.set(source, session)
+
   const connectTimeout = setTimeout(() => {
-    rejectReady(new Error('Timed out connecting to OpenAI Realtime API.'))
-    cleanupSession()
+    rejectReady(new Error(`Timed out connecting to OpenAI Realtime API (${source}).`))
+    cleanupSession(source)
   }, CONNECT_TIMEOUT_MS)
 
   ws.on('open', () => {
@@ -93,8 +122,8 @@ async function startSession(sender: WebContents): Promise<void> {
     } catch {
       const error = new Error('Failed to parse server event.')
       rejectReady(error)
-      sendToRenderer('transcription:error', { message: error.message })
-      cleanupSession()
+      sendToRenderer('transcription:error', { message: error.message, source })
+      cleanupSession(source)
       return
     }
 
@@ -103,22 +132,28 @@ async function startSession(sender: WebContents): Promise<void> {
       clearTimeout(connectTimeout)
       resolveReady()
 
-      if (session) {
-        session.commitTimer = setInterval(() => {
-          if (!session?.hasPendingAudio || session.ws.readyState !== WebSocket.OPEN) {
-            return
-          }
+      session.commitTimer = setInterval(() => {
+        if (!session.hasPendingAudio || session.ws.readyState !== WebSocket.OPEN) {
+          return
+        }
 
-          commitAudioBuffer(session.ws)
-          session.hasPendingAudio = false
-        }, COMMIT_INTERVAL_MS)
-      }
+        commitAudioBuffer(session.ws)
+        session.hasPendingAudio = false
+      }, COMMIT_INTERVAL_MS)
 
       return
     }
 
     if (event.type === 'conversation.item.input_audio_transcription.delta' && event.delta) {
-      sendToRenderer('transcription:delta', { delta: event.delta })
+      sendToRenderer('transcription:delta', { source, delta: event.delta })
+      return
+    }
+
+    if (
+      event.type === 'conversation.item.input_audio_transcription.completed' &&
+      event.transcript
+    ) {
+      sendToRenderer('transcription:utterance', { source, text: event.transcript })
       return
     }
 
@@ -127,9 +162,9 @@ async function startSession(sender: WebContents): Promise<void> {
       event.type === 'error'
     ) {
       const message = event.error?.message ?? 'Transcription failed.'
-      sendToRenderer('transcription:error', { message })
+      sendToRenderer('transcription:error', { message, source })
       rejectReady(new Error(message))
-      cleanupSession()
+      cleanupSession(source)
     }
   })
 
@@ -137,70 +172,102 @@ async function startSession(sender: WebContents): Promise<void> {
     clearTimeout(connectTimeout)
     const error = err instanceof Error ? err : new Error(String(err))
     rejectReady(error)
-    sendToRenderer('transcription:error', { message: error.message })
-    cleanupSession()
+    sendToRenderer('transcription:error', { message: error.message, source })
+    cleanupSession(source)
   })
 
   ws.on('close', (code) => {
     clearTimeout(connectTimeout)
 
-    if (!closingIntentionally) {
-      sendToRenderer('transcription:closed', {})
+    if (!session.closingIntentionally) {
+      sendToRenderer('transcription:closed', { source })
     }
 
-    closingIntentionally = false
+    session.closingIntentionally = false
 
     if (!isReady && code !== 1000) {
-      rejectReady(new Error(`WebSocket closed: ${code}`))
+      rejectReady(new Error(`WebSocket closed (${source}): ${code}`))
     }
 
-    cleanupSession()
+    cleanupSession(source)
   })
 
+  await ready
+}
+
+async function startSessions(sender: WebContents, sources: TranscriptSource[]): Promise<void> {
+  const apiKey = process.env.OPENAI_API_KEY
+
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is not set.')
+  }
+
+  if (active) {
+    throw new Error('Transcription is already active.')
+  }
+
+  const uniqueSources = [...new Set(sources)]
+
+  for (const source of uniqueSources) {
+    if (!ALL_SOURCES.includes(source)) {
+      throw new Error(`Unknown transcription source: ${source}`)
+    }
+  }
+
+  active = { sender, sessions: new Map() }
+
   try {
-    await ready
+    await Promise.all(uniqueSources.map((source) => createSession(source, sender, apiKey)))
   } catch (error) {
-    cleanupSession()
+    cleanupAllSessions()
     throw error
   }
 }
 
-async function stopSession(): Promise<void> {
-  if (!session) {
+async function stopSessions(): Promise<void> {
+  if (!active) {
     return
   }
 
-  const { ws, hasPendingAudio } = session
-  closingIntentionally = true
+  for (const session of active.sessions.values()) {
+    session.closingIntentionally = true
 
-  if (hasPendingAudio && ws.readyState === WebSocket.OPEN) {
-    commitAudioBuffer(ws)
+    if (session.hasPendingAudio && session.ws.readyState === WebSocket.OPEN) {
+      commitAudioBuffer(session.ws)
+    }
   }
 
-  cleanupSession()
+  cleanupAllSessions()
 }
 
 export function registerTranscriptionHandlers(): void {
-  ipcMain.handle('transcription:start', async (event) => {
-    await startSession(event.sender)
+  ipcMain.handle('transcription:start', async (event, sources: TranscriptSource[]) => {
+    await startSessions(event.sender, sources)
   })
 
   ipcMain.handle('transcription:stop', async () => {
-    await stopSession()
+    await stopSessions()
   })
 
-  ipcMain.on('transcription:audio', (_event, pcm: Uint8Array) => {
-    if (!session) {
-      return
-    }
+  ipcMain.on(
+    'transcription:audio',
+    (_event, payload: { source: TranscriptSource; pcm: Uint8Array }) => {
+      const session = active?.sessions.get(payload.source)
 
-    void session.ready.then(() => {
-      if (!session || session.ws.readyState !== WebSocket.OPEN) {
+      if (!session) {
         return
       }
 
-      appendAudioChunk(session.ws, pcm)
-      session.hasPendingAudio = true
-    })
-  })
+      void session.ready.then(() => {
+        const current = active?.sessions.get(payload.source)
+
+        if (!current || current.ws.readyState !== WebSocket.OPEN) {
+          return
+        }
+
+        appendAudioChunk(current.ws, payload.pcm)
+        current.hasPendingAudio = true
+      })
+    }
+  )
 }

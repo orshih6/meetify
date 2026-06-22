@@ -1,3 +1,4 @@
+import { useDetailStore } from '@renderer/stores/detailStore'
 import { useSessionsStore } from '@renderer/stores/sessionsStore'
 import { create } from 'zustand'
 
@@ -23,6 +24,7 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
       past: [...state.past, currentId],
       future: []
     }))
+    useDetailStore.getState().resetDetail()
     useSessionsStore.setState({ selectedSessionId: nextId })
   },
   goBack: () => {
@@ -39,6 +41,7 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
       past: past.slice(0, -1),
       future: [currentId, ...future]
     })
+    useDetailStore.getState().resetDetail()
     useSessionsStore.setState({ selectedSessionId: previousId })
   },
   goForward: () => {
@@ -55,6 +58,7 @@ export const useNavigationStore = create<NavigationState>((set, get) => ({
       past: [...past, currentId],
       future: future.slice(1)
     })
+    useDetailStore.getState().resetDetail()
     useSessionsStore.setState({ selectedSessionId: nextId })
   }
 }))

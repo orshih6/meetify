@@ -1,11 +1,13 @@
 import { formatDetailDate } from '@renderer/lib/format'
-import type { MeetingSession } from '@renderer/types/meeting'
+import { useSelectedSession } from '@renderer/stores/sessionsStore'
 
-type SessionDetailHeaderProps = {
-  session: MeetingSession
-}
+export function SessionDetailHeader() {
+  const session = useSelectedSession()
 
-export function SessionDetailHeader({ session }: SessionDetailHeaderProps) {
+  if (!session) {
+    return null
+  }
+
   return (
     <header className="pt-8">
       <p className="text-sm text-neutral-500">{formatDetailDate(session.startedAt)}</p>

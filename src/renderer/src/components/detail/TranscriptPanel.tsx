@@ -1,12 +1,10 @@
 import { TranscriptEntry } from '@renderer/components/detail/TranscriptEntry'
-import type { MeetingSession } from '@renderer/types/meeting'
+import { useSelectedSession } from '@renderer/stores/sessionsStore'
 
-type TranscriptPanelProps = {
-  session: MeetingSession
-}
+export function TranscriptPanel() {
+  const session = useSelectedSession()
 
-export function TranscriptPanel({ session }: TranscriptPanelProps) {
-  if (!session.transcript?.length) {
+  if (!session?.transcript?.length) {
     return (
       <section className="mt-8">
         <p className="text-sm text-neutral-500">Transcript will appear here</p>

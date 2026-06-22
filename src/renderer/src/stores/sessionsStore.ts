@@ -33,8 +33,7 @@ export const useSessionsStore = create<SessionsState>((set, get) => ({
 }))
 
 export function useSelectedSession(): MeetingSession | undefined {
-  const sessions = useSessionsStore((state) => state.sessions)
-  const selectedSessionId = useSessionsStore((state) => state.selectedSessionId)
-
-  return sessions.find((session) => session.id === selectedSessionId)
+  return useSessionsStore((state) =>
+    state.sessions.find((session) => session.id === state.selectedSessionId)
+  )
 }

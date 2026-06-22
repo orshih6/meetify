@@ -5,14 +5,9 @@ import type { SessionDateGroup as SessionDateGroupType } from '@renderer/lib/for
 type SessionDateGroupProps = {
   group: SessionDateGroupType
   isFirst: boolean
-  onSelect: (id: string) => void
 }
 
-export function SessionDateGroup({
-  group,
-  isFirst,
-  onSelect
-}: SessionDateGroupProps) {
+export function SessionDateGroup({ group, isFirst }: SessionDateGroupProps) {
   return (
     <section>
       <h2 className={cn('pb-2 text-sm text-neutral-500', isFirst ? 'pt-6' : 'pt-8')}>
@@ -21,7 +16,7 @@ export function SessionDateGroup({
       <ul className="flex flex-col">
         {group.sessions.map((session) => (
           <li key={session.id}>
-            <SessionListItem session={session} onSelect={onSelect} />
+            <SessionListItem session={session} />
           </li>
         ))}
       </ul>

@@ -4,6 +4,16 @@ export type TranscriptEntry = {
   text: string
 }
 
+export type SavedTranscriptEntry = TranscriptEntry & {
+  elapsedSeconds: number
+}
+
+export type SavedSessionTranscript = {
+  startedAt: string
+  durationSeconds: number
+  transcript: SavedTranscriptEntry[]
+}
+
 export type MeetingSession = {
   id: string
   title: string

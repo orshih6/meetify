@@ -5,21 +5,18 @@ import { copyToClipboard } from '@renderer/lib/clipboard'
 import { formatTranscriptForCopy } from '@renderer/lib/transcript'
 import { cn } from '@renderer/lib/utils'
 import { useDetailStore } from '@renderer/stores/detailStore'
-import type { MeetingSession } from '@renderer/types/meeting'
+import { useSelectedSession } from '@renderer/stores/sessionsStore'
 
 const TABS = ['Summary', 'Transcript'] as const
 
-type SessionDetailTabsProps = {
-  session: MeetingSession
-}
-
-export function SessionDetailTabs({ session }: SessionDetailTabsProps) {
+export function SessionDetailTabs() {
+  const session = useSelectedSession()
   const activeTab = useDetailStore((state) => state.activeTab)
   const isTranscriptTab = activeTab === 'transcript'
   const copyLabel = isTranscriptTab ? 'Copy full transcript' : 'Copy full summary'
   const copyContent = isTranscriptTab
-    ? formatTranscriptForCopy(session.transcript)
-    : (session.summary ?? DEFAULT_SUMMARY_MARKDOWN)
+    ? formatTranscriptForCopy(session?.transcript)
+    : (session?.summary ?? DEFAULT_SUMMARY_MARKDOWN)
 
   return (
     <div className="mt-8 flex items-center justify-between gap-4">

@@ -8,10 +8,10 @@ import type { MeetingSession } from '@renderer/types/meeting'
 
 type SessionListItemProps = {
   session: MeetingSession
-  onSelect: (id: string) => void
 }
 
-export function SessionListItem({ session, onSelect }: SessionListItemProps) {
+export function SessionListItem({ session }: SessionListItemProps) {
+  const selectSession = useSessionsStore((state) => state.selectSession)
   const deleteSession = useSessionsStore((state) => state.deleteSession)
   const exportSession = useSessionsStore((state) => state.exportSession)
 
@@ -23,7 +23,7 @@ export function SessionListItem({ session, onSelect }: SessionListItemProps) {
       )}
     >
       <Button
-        onClick={() => onSelect(session.id)}
+        onClick={() => selectSession(session.id)}
         className={cn(
           'flex min-w-0 flex-1 items-center justify-between gap-4 text-left',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600'

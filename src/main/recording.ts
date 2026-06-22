@@ -2,6 +2,19 @@ import { app, desktopCapturer, ipcMain, session, systemPreferences } from 'elect
 import { mkdir, writeFile } from 'fs/promises'
 import { join } from 'path'
 
+type SavedTranscriptEntry = {
+  speaker: string
+  time: string
+  text: string
+  elapsedSeconds: number
+}
+
+type SavedSessionTranscript = {
+  startedAt: string
+  durationSeconds: number
+  transcript: SavedTranscriptEntry[]
+}
+
 export function registerDisplayMediaHandler(): void {
   session.defaultSession.setDisplayMediaRequestHandler((_request, callback) => {
     desktopCapturer
@@ -48,6 +61,19 @@ export function registerRecordingHandlers(): void {
 
       const filePath = join(recordingsDir, filename)
       await writeFile(filePath, buffer)
+
+      return filePath
+    }
+  )
+
+  ipcMain.handle(
+    'transcript:save',
+    async (_event, payload: SavedSessionTranscript, filename: string): Promise<string> => {
+      const transcriptsDir = join(app.getPath('userData'), 'transcripts')
+      await mkdir(transcriptsDir, { recursive: true })
+
+      const filePath = join(transcriptsDir, filename)
+      await writeFile(filePath, JSON.stringify(payload, null, 2), 'utf8')
 
       return filePath
     }

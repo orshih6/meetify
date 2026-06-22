@@ -1,15 +1,37 @@
 import { Button } from '@headlessui/react'
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  Cog6ToothIcon,
-  Squares2X2Icon
-} from '@heroicons/react/16/solid'
+import { ChevronLeftIcon, ChevronRightIcon, Cog6ToothIcon } from '@heroicons/react/16/solid'
 import { cn } from '@renderer/lib/utils'
 import { useCanGoBack, useCanGoForward, useNavigationStore } from '@renderer/stores/navigationStore'
 import { useSettingsStore } from '@renderer/stores/settingsStore'
+import type { ComponentType, SVGProps } from 'react'
 
-const isMac = window.api.platform === 'darwin'
+const IS_MAC = window.api?.platform === 'darwin'
+
+const iconButtonClass = cn(
+  'rounded p-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600'
+)
+
+type NavIconButtonProps = {
+  onClick: () => void
+  disabled: boolean
+  icon: ComponentType<SVGProps<SVGSVGElement>>
+}
+
+function NavIconButton({ onClick, disabled, icon: Icon }: NavIconButtonProps) {
+  return (
+    <Button
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        iconButtonClass,
+        disabled ? 'cursor-default text-neutral-700' : 'text-neutral-400 hover:text-white',
+        'disabled:opacity-100'
+      )}
+    >
+      <Icon className="h-4 w-4" />
+    </Button>
+  )
+}
 
 export function AppHeader() {
   const canGoBack = useCanGoBack()
@@ -25,46 +47,15 @@ export function AppHeader() {
         'border-b border-neutral-900/50 bg-black px-4'
       )}
     >
-      <div className={cn('app-header-no-drag flex items-center gap-0.5', isMac && 'pl-[72px]')}>
-        <Button
-          onClick={goBack}
-          disabled={!canGoBack}
-          className={cn(
-            'rounded p-2 transition-colors',
-            canGoBack ? 'text-neutral-400 hover:text-white' : 'cursor-default text-neutral-700',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600 disabled:opacity-100'
-          )}
-        >
-          <ChevronLeftIcon className="h-4 w-4" />
-        </Button>
-        <Button
-          onClick={goForward}
-          disabled={!canGoForward}
-          className={cn(
-            'rounded p-2 transition-colors',
-            canGoForward ? 'text-neutral-400 hover:text-white' : 'cursor-default text-neutral-700',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600 disabled:opacity-100'
-          )}
-        >
-          <ChevronRightIcon className="h-4 w-4" />
-        </Button>
+      <div className={cn('app-header-no-drag flex items-center gap-0.5', IS_MAC && 'pl-[72px]')}>
+        <NavIconButton onClick={goBack} disabled={!canGoBack} icon={ChevronLeftIcon} />
+        <NavIconButton onClick={goForward} disabled={!canGoForward} icon={ChevronRightIcon} />
       </div>
 
       <div className="app-header-no-drag flex items-center gap-1 pr-1">
         <Button
-          className={cn(
-            'rounded p-2 text-neutral-400 transition-colors hover:text-white',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600'
-          )}
-        >
-          <Squares2X2Icon className="h-4 w-4" />
-        </Button>
-        <Button
           onClick={openSettings}
-          className={cn(
-            'rounded p-2 text-neutral-400 transition-colors hover:text-white',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600'
-          )}
+          className={cn(iconButtonClass, 'text-neutral-400 hover:text-white')}
         >
           <Cog6ToothIcon className="h-4 w-4" />
         </Button>

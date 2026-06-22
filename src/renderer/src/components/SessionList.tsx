@@ -6,7 +6,6 @@ import { useSessionsStore } from '@renderer/stores/sessionsStore'
 
 export function SessionList() {
   const sessions = useSessionsStore((state) => state.sessions)
-  const selectSession = useSessionsStore((state) => state.selectSession)
   const groups = groupSessionsByDate(sessions)
 
   return (
@@ -14,12 +13,7 @@ export function SessionList() {
       <ContentContainer className="pb-8">
         <HomeSection />
         {groups.map((group, index) => (
-          <SessionDateGroup
-            key={group.label}
-            group={group}
-            isFirst={index === 0}
-            onSelect={selectSession}
-          />
+          <SessionDateGroup key={group.label} group={group} isFirst={index === 0} />
         ))}
       </ContentContainer>
     </div>

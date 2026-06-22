@@ -10,7 +10,7 @@ function App() {
     <div className="flex h-screen flex-col bg-black">
       <AppHeader />
       <main className="min-h-0 flex-1 overflow-hidden">
-        {selectedSessionId ? <SessionDetail /> : <SessionList />}
+        {selectedSessionId ? <SessionDetail key={selectedSessionId} /> : <SessionList />}
       </main>
       <SettingsModal />
     </div>

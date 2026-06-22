@@ -1,28 +1,39 @@
-import { audioStreamCapture } from '@renderer/lib/audioStreamCapture'
+import {
+  audioStreamCapture,
+  type TranscriptSource
+} from '@renderer/lib/audioStreamCapture'
+
+type TranscriptionEvent =
+  | { type: 'delta'; source: TranscriptSource; delta: string }
+  | { type: 'utterance'; source: TranscriptSource; text: string }
 
 type Unsubscribe = () => void
 
-let deltaUnsubscribe: Unsubscribe | null = null
-let errorUnsubscribe: Unsubscribe | null = null
-let closedUnsubscribe: Unsubscribe | null = null
+let unsubscribes: Unsubscribe[] = []
 
-async function start(onDelta: (text: string) => void): Promise<{ warning: string | null }> {
-  deltaUnsubscribe = window.api.transcription.onDelta((delta) => {
-    onDelta(delta)
-  })
+async function start(
+  onEvent: (event: TranscriptionEvent) => void
+): Promise<{ warning: string | null }> {
+  unsubscribes = [
+    window.api.transcription.onDelta(({ source, delta }) => {
+      onEvent({ type: 'delta', source, delta })
+    }),
+    window.api.transcription.onUtterance(({ source, text }) => {
+      onEvent({ type: 'utterance', source, text })
+    }),
+    window.api.transcription.onError((message) => {
+      console.error('Transcription error:', message)
+    }),
+    window.api.transcription.onClosed(() => {
+      console.warn('Transcription session closed unexpectedly.')
+    })
+  ]
 
-  errorUnsubscribe = window.api.transcription.onError((message) => {
-    console.error('Transcription error:', message)
-  })
+  const { warning, sources } = await audioStreamCapture.prepare()
+  await window.api.transcription.start(sources)
 
-  closedUnsubscribe = window.api.transcription.onClosed(() => {
-    console.warn('Transcription session closed unexpectedly.')
-  })
-
-  await window.api.transcription.start()
-
-  const { warning } = await audioStreamCapture.start((pcm) => {
-    window.api.transcription.sendAudio(pcm)
+  audioStreamCapture.beginProcessing((source, pcm) => {
+    window.api.transcription.sendAudio(source, pcm)
   })
 
   return { warning }
@@ -31,12 +42,10 @@ async function start(onDelta: (text: string) => void): Promise<{ warning: string
 async function stop(): Promise<void> {
   audioStreamCapture.stop()
 
-  deltaUnsubscribe?.()
-  errorUnsubscribe?.()
-  closedUnsubscribe?.()
-  deltaUnsubscribe = null
-  errorUnsubscribe = null
-  closedUnsubscribe = null
+  for (const unsubscribe of unsubscribes) {
+    unsubscribe()
+  }
+  unsubscribes = []
 
   await window.api.transcription.stop()
 }

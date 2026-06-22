@@ -1,5 +1,20 @@
 import { create } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
+import {
+  appendDelta,
+  buildSavedSessionTranscript,
+  createLiveTranscriptState,
+  finalizePartialOnEnd,
+  finalizeUtterance,
+  makeTranscriptFilename,
+  TRANSCRIPT_SOURCES,
+  type LiveTranscriptState
+} from '@renderer/lib/liveTranscript'
 import { realtimeTranscriptionService } from '@renderer/lib/realtimeTranscriptionService'
+
+function toErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback
+}
 
 type HomeState = {
   isDetectable: boolean
@@ -8,7 +23,7 @@ type HomeState = {
   isStopping: boolean
   recordingError: string | null
   recordingWarning: string | null
-  liveTranscript: string
+  liveTranscriptState: LiveTranscriptState
   recordingStartedAt: number | null
   toggleDetectable: () => void
   startRecording: () => Promise<void>
@@ -22,7 +37,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   isStopping: false,
   recordingError: null,
   recordingWarning: null,
-  liveTranscript: '',
+  liveTranscriptState: createLiveTranscriptState(),
   recordingStartedAt: null,
   toggleDetectable: () => set((state) => ({ isDetectable: !state.isDetectable })),
   startRecording: async () => {
@@ -36,18 +51,45 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       isStarting: true,
       recordingError: null,
       recordingWarning: null,
-      liveTranscript: ''
+      liveTranscriptState: createLiveTranscriptState()
     })
 
     try {
-      const { warning } = await realtimeTranscriptionService.start((text) => {
-        set((state) => ({ liveTranscript: state.liveTranscript + text }))
+      const recordingStartedAt = Date.now()
+
+      const { warning } = await realtimeTranscriptionService.start((event) => {
+        set((state) => {
+          const startedAt = state.recordingStartedAt ?? recordingStartedAt
+
+          if (event.type === 'delta') {
+            return {
+              liveTranscriptState: appendDelta(
+                state.liveTranscriptState,
+                event.source,
+                event.delta
+              )
+            }
+          }
+
+          if (event.type === 'utterance') {
+            return {
+              liveTranscriptState: finalizeUtterance(
+                state.liveTranscriptState,
+                event.source,
+                event.text,
+                startedAt
+              )
+            }
+          }
+
+          return state
+        })
       })
 
       set({
         isRecording: true,
         isStarting: false,
-        recordingStartedAt: Date.now(),
+        recordingStartedAt,
         recordingWarning: warning
       })
     } catch (error) {
@@ -55,12 +97,12 @@ export const useHomeStore = create<HomeState>((set, get) => ({
         isStarting: false,
         isRecording: false,
         recordingStartedAt: null,
-        recordingError: error instanceof Error ? error.message : 'Failed to start recording.'
+        recordingError: toErrorMessage(error, 'Failed to start recording.')
       })
     }
   },
   stopRecording: async () => {
-    const { isRecording, isStopping } = get()
+    const { isRecording, isStopping, recordingStartedAt } = get()
 
     if (!isRecording || isStopping) {
       return
@@ -71,18 +113,65 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     try {
       await realtimeTranscriptionService.stop()
 
+      const stoppedAt = Date.now()
+      let saveError: string | null = null
+      let nextLiveTranscriptState = get().liveTranscriptState
+
+      if (recordingStartedAt !== null) {
+        for (const source of TRANSCRIPT_SOURCES) {
+          nextLiveTranscriptState = finalizePartialOnEnd(
+            nextLiveTranscriptState,
+            source,
+            recordingStartedAt
+          )
+        }
+
+        if (nextLiveTranscriptState.entries.length > 0) {
+          try {
+            const payload = buildSavedSessionTranscript(
+              nextLiveTranscriptState,
+              recordingStartedAt,
+              stoppedAt
+            )
+            const filename = makeTranscriptFilename(recordingStartedAt)
+            await window.api.transcript.save(payload, filename)
+          } catch (error) {
+            saveError = toErrorMessage(error, 'Failed to save transcript file.')
+          }
+        }
+      }
+
       set({
         isRecording: false,
         isStopping: false,
-        recordingStartedAt: null
+        recordingStartedAt: null,
+        liveTranscriptState: nextLiveTranscriptState,
+        recordingError: saveError
       })
     } catch (error) {
       set({
         isRecording: false,
         isStopping: false,
         recordingStartedAt: null,
-        recordingError: error instanceof Error ? error.message : 'Failed to stop recording.'
+        recordingError: toErrorMessage(error, 'Failed to stop recording.')
       })
     }
   }
 }))
+
+export function useHomeRecording() {
+  return useHomeStore(
+    useShallow((state) => ({
+      isDetectable: state.isDetectable,
+      isRecording: state.isRecording,
+      isStarting: state.isStarting,
+      isStopping: state.isStopping,
+      recordingError: state.recordingError,
+      recordingWarning: state.recordingWarning,
+      recordingStartedAt: state.recordingStartedAt,
+      toggleDetectable: state.toggleDetectable,
+      startRecording: state.startRecording,
+      stopRecording: state.stopRecording
+    }))
+  )
+}
