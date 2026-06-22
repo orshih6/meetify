@@ -1,25 +1,42 @@
 import type { MeetingSession } from '@renderer/types/meeting'
 import { formatDetailDate, formatSessionTime } from '@renderer/lib/format'
-import type { SavedSessionTranscript } from '@shared/ipc'
+import type { SavedSessionTranscript, SessionListEntry, SessionLoadResult } from '@shared/ipc'
 
-export function transcriptFilenameToId(filename: string): string {
-  return filename.replace(/\.json$/, '')
+export function meetingSessionFromListEntry(entry: SessionListEntry): MeetingSession {
+  return {
+    id: entry.sessionId,
+    title: entry.title,
+    startedAt: new Date(entry.startedAt),
+    durationSeconds: entry.durationSeconds,
+    summaryStatus: entry.summaryStatus
+  }
 }
 
-export function meetingSessionFromTranscript(
-  filename: string,
+export function meetingSessionFromLoadResult(result: SessionLoadResult): MeetingSession {
+  return {
+    id: result.sessionId,
+    title: result.title,
+    startedAt: new Date(result.startedAt),
+    durationSeconds: result.durationSeconds,
+    summary: result.summary,
+    summaryStatus: result.summaryStatus,
+    transcript: result.transcript.map(({ speaker, time, text }) => ({ speaker, time, text }))
+  }
+}
+
+export function meetingSessionFromSave(
+  sessionId: string,
   payload: SavedSessionTranscript
 ): MeetingSession {
   const startedAt = new Date(payload.startedAt)
-  const id = transcriptFilenameToId(filename)
 
   return {
-    id,
+    id: sessionId,
     title: `Recording ${formatDetailDate(startedAt)} ${formatSessionTime(startedAt)}`,
     startedAt,
     durationSeconds: payload.durationSeconds,
     transcript: payload.transcript.map(({ speaker, time, text }) => ({ speaker, time, text })),
-    transcriptFilename: filename
+    summaryStatus: 'processing'
   }
 }
 

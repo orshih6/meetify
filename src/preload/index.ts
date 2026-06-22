@@ -4,7 +4,10 @@ import { IPC_CHANNELS } from '@shared/ipc'
 import type {
   AppSettings,
   SavedSessionTranscript,
-  TranscriptListEntry,
+  SessionListEntry,
+  SessionLoadResult,
+  SessionSaveResult,
+  SummaryGenerateResult,
   TranscriptionDeltaPayload,
   TranscriptionErrorPayload,
   TranscriptionSourcePayload,
@@ -72,12 +75,16 @@ const api = {
     save: (buffer: ArrayBuffer, filename: string): Promise<string> =>
       ipcRenderer.invoke(IPC_CHANNELS.recording.save, new Uint8Array(buffer), filename)
   },
-  transcript: {
-    save: (payload: SavedSessionTranscript, filename: string): Promise<string> =>
-      ipcRenderer.invoke(IPC_CHANNELS.transcript.save, payload, filename),
-    list: (): Promise<TranscriptListEntry[]> => ipcRenderer.invoke(IPC_CHANNELS.transcript.list),
-    load: (filename: string): Promise<SavedSessionTranscript | null> =>
-      ipcRenderer.invoke(IPC_CHANNELS.transcript.load, filename)
+  session: {
+    save: (payload: SavedSessionTranscript): Promise<SessionSaveResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.session.save, payload),
+    list: (): Promise<SessionListEntry[]> => ipcRenderer.invoke(IPC_CHANNELS.session.list),
+    load: (sessionId: string): Promise<SessionLoadResult | null> =>
+      ipcRenderer.invoke(IPC_CHANNELS.session.load, sessionId)
+  },
+  summary: {
+    generate: (sessionId: string): Promise<SummaryGenerateResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.summary.generate, sessionId)
   },
   transcription: {
     start: (sources: TranscriptSource[]): Promise<void> =>

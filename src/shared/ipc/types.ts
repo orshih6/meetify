@@ -37,10 +37,32 @@ export type SavedSessionTranscript = {
   transcript: SavedTranscriptEntry[]
 }
 
-export type TranscriptListEntry = {
-  filename: string
+export type SummaryStatus = 'processing' | 'ready' | 'error'
+
+export type SessionSaveResult = {
+  sessionId: string
+}
+
+export type SessionListEntry = {
+  sessionId: string
+  title: string
   startedAt: string
   durationSeconds: number
+  summaryStatus: SummaryStatus
+}
+
+export type SessionLoadResult = {
+  sessionId: string
+  title: string
+  startedAt: string
+  durationSeconds: number
+  transcript: SavedTranscriptEntry[]
+  summary?: string
+  summaryStatus?: SummaryStatus
+}
+
+export type SummaryGenerateResult = {
+  summary: string
 }
 
 export type AppSettings = {

@@ -1,4 +1,8 @@
-import { meetingSessionFromTranscript } from '@renderer/lib/sessions'
+import {
+  meetingSessionFromListEntry,
+  meetingSessionFromLoadResult,
+  meetingSessionFromSave
+} from '@renderer/lib/sessions'
 import type { MeetingSession } from '@renderer/types/meeting'
 import type { SavedSessionTranscript } from '@shared/ipc'
 import { create } from 'zustand'
@@ -8,9 +12,21 @@ type SessionCatalogState = {
   isLoading: boolean
   loadError: string | null
   loadCatalog: () => Promise<void>
-  addSessionFromTranscript: (filename: string, payload: SavedSessionTranscript) => MeetingSession
+  addSessionFromSave: (sessionId: string, payload: SavedSessionTranscript) => MeetingSession
+  requestSummary: (sessionId: string) => Promise<void>
+  loadSessionDetail: (sessionId: string) => Promise<MeetingSession | null>
   removeSession: (id: string) => void
   exportSession: (id: string) => void
+}
+
+function mergeSession(existing: MeetingSession | undefined, next: MeetingSession): MeetingSession {
+  return {
+    ...existing,
+    ...next,
+    transcript: next.transcript ?? existing?.transcript,
+    summary: next.summary ?? existing?.summary,
+    summaryStatus: next.summaryStatus ?? existing?.summaryStatus
+  }
 }
 
 export const useSessionCatalogStore = create<SessionCatalogState>((set, get) => ({
@@ -22,16 +38,8 @@ export const useSessionCatalogStore = create<SessionCatalogState>((set, get) => 
     set({ isLoading: true, loadError: null })
 
     try {
-      const entries = await window.api.transcript.list()
-      const sessions: MeetingSession[] = []
-
-      for (const entry of entries) {
-        const payload = await window.api.transcript.load(entry.filename)
-
-        if (payload) {
-          sessions.push(meetingSessionFromTranscript(entry.filename, payload))
-        }
-      }
+      const entries = await window.api.session.list()
+      const sessions = entries.map(meetingSessionFromListEntry)
 
       set({ sessions, isLoading: false })
     } catch (error) {
@@ -42,11 +50,47 @@ export const useSessionCatalogStore = create<SessionCatalogState>((set, get) => 
     }
   },
 
-  addSessionFromTranscript: (filename, payload) => {
-    const session = meetingSessionFromTranscript(filename, payload)
+  addSessionFromSave: (sessionId, payload) => {
+    const session = meetingSessionFromSave(sessionId, payload)
 
     set((state) => ({
       sessions: [session, ...state.sessions.filter((item) => item.id !== session.id)]
+    }))
+
+    return session
+  },
+
+  requestSummary: async (sessionId) => {
+    try {
+      const { summary } = await window.api.summary.generate(sessionId)
+
+      set((state) => ({
+        sessions: state.sessions.map((session) =>
+          session.id === sessionId ? { ...session, summary, summaryStatus: 'ready' } : session
+        )
+      }))
+    } catch {
+      set((state) => ({
+        sessions: state.sessions.map((session) =>
+          session.id === sessionId ? { ...session, summaryStatus: 'error' } : session
+        )
+      }))
+    }
+  },
+
+  loadSessionDetail: async (sessionId) => {
+    const result = await window.api.session.load(sessionId)
+
+    if (!result) {
+      return null
+    }
+
+    const session = meetingSessionFromLoadResult(result)
+
+    set((state) => ({
+      sessions: state.sessions.map((item) =>
+        item.id === sessionId ? mergeSession(item, session) : item
+      )
     }))
 
     return session

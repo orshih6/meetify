@@ -6,7 +6,9 @@ import icon from '../../resources/icon.png?asset'
 import { registerDisplayMediaHandler } from './displayCapture'
 import { registerMicPermissionHandlers } from './micPermission'
 import { registerAudioPersistenceHandlers } from './audioPersistence'
-import { registerTranscriptPersistenceHandlers } from './transcriptPersistence'
+import { initMastraStorage } from './mastraStorage'
+import { registerSessionHandlers } from './sessionHandlers'
+import { registerSummaryHandlers } from './summaryHandlers'
 import { registerSettingsHandlers } from './settingsPersistence'
 import { registerTranscriptionHandlers } from './transcription'
 
@@ -88,7 +90,7 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
@@ -105,7 +107,9 @@ app.whenReady().then(() => {
   registerDisplayMediaHandler()
   registerMicPermissionHandlers()
   registerAudioPersistenceHandlers()
-  registerTranscriptPersistenceHandlers()
+  await initMastraStorage()
+  registerSessionHandlers()
+  registerSummaryHandlers()
   registerSettingsHandlers()
   registerTranscriptionHandlers()
 

@@ -4,7 +4,6 @@ import {
   type RecordingPipeline
 } from '@renderer/lib/recording'
 import { useSessionCatalogStore } from '@renderer/stores/sessionCatalogStore'
-import { useSessionNavigationStore } from '@renderer/stores/sessionNavigationStore'
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -108,16 +107,14 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     set({ isStopping: true, recordingError: null })
 
     try {
-      const { payload, filename, saveError } = await recordingPipeline.stop()
+      const { payload, sessionId, saveError } = await recordingPipeline.stop()
 
       pipelineUnsubscribe?.()
       pipelineUnsubscribe = null
 
-      if (payload && filename) {
-        const session = useSessionCatalogStore
-          .getState()
-          .addSessionFromTranscript(filename, payload)
-        useSessionNavigationStore.getState().selectSession(session.id)
+      if (payload && sessionId) {
+        useSessionCatalogStore.getState().addSessionFromSave(sessionId, payload)
+        void useSessionCatalogStore.getState().requestSummary(sessionId)
       }
 
       set((state) => ({

@@ -6,12 +6,22 @@ import { SessionDetailTabs } from '@renderer/components/detail/SessionDetailTabs
 import { SummaryPanel } from '@renderer/components/detail/SummaryPanel'
 import { TranscriptPanel } from '@renderer/components/detail/TranscriptPanel'
 import { detailTabToIndex, indexToDetailTab, useDetailStore } from '@renderer/stores/detailStore'
+import { useSessionCatalogStore } from '@renderer/stores/sessionCatalogStore'
 import { useSelectedSession } from '@renderer/stores/sessionNavigationStore'
+import { useEffect } from 'react'
 
 export function SessionDetail() {
   const session = useSelectedSession()
+  const selectedSessionId = session?.id
+  const loadSessionDetail = useSessionCatalogStore((state) => state.loadSessionDetail)
   const activeTab = useDetailStore((state) => state.activeTab)
   const setActiveTab = useDetailStore((state) => state.setActiveTab)
+
+  useEffect(() => {
+    if (selectedSessionId) {
+      void loadSessionDetail(selectedSessionId)
+    }
+  }, [loadSessionDetail, selectedSessionId])
 
   if (!session) {
     return (

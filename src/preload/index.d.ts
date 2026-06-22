@@ -2,7 +2,10 @@ import { ElectronAPI } from '@electron-toolkit/preload'
 import type {
   AppSettings,
   SavedSessionTranscript,
-  TranscriptListEntry,
+  SessionListEntry,
+  SessionLoadResult,
+  SessionSaveResult,
+  SummaryGenerateResult,
   TranscriptionDeltaPayload,
   TranscriptionErrorPayload,
   TranscriptionSourcePayload,
@@ -19,10 +22,13 @@ declare global {
         requestMicPermission: () => Promise<boolean>
         save: (buffer: ArrayBuffer, filename: string) => Promise<string>
       }
-      transcript: {
-        save: (payload: SavedSessionTranscript, filename: string) => Promise<string>
-        list: () => Promise<TranscriptListEntry[]>
-        load: (filename: string) => Promise<SavedSessionTranscript | null>
+      session: {
+        save: (payload: SavedSessionTranscript) => Promise<SessionSaveResult>
+        list: () => Promise<SessionListEntry[]>
+        load: (sessionId: string) => Promise<SessionLoadResult | null>
+      }
+      summary: {
+        generate: (sessionId: string) => Promise<SummaryGenerateResult>
       }
       transcription: {
         start: (sources: TranscriptSource[]) => Promise<void>

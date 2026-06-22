@@ -7,7 +7,6 @@ import {
   finalizePartialOnEnd,
   finalizeUtterance,
   getLiveDisplayText,
-  makeTranscriptFilename,
   TRANSCRIPT_SOURCES,
   type LiveTranscriptState
 } from '@renderer/lib/recording/transcriptState'
@@ -25,7 +24,7 @@ export type RecordingPipeline = {
   start: () => Promise<{ warning: string | null }>
   stop: () => Promise<{
     payload: SavedSessionTranscript | null
-    filename: string | null
+    sessionId: string | null
     saveError: string | null
   }>
   subscribe: (listener: (event: RecordingEvent) => void) => Unsubscribe
@@ -126,7 +125,7 @@ export function createRecordingPipeline(deps?: { api?: RecordingApi }): Recordin
 
     async stop(): Promise<{
       payload: SavedSessionTranscript | null
-      filename: string | null
+      sessionId: string | null
       saveError: string | null
     }> {
       capture.stop()
@@ -143,7 +142,7 @@ export function createRecordingPipeline(deps?: { api?: RecordingApi }): Recordin
       recordingStartedAt = null
 
       if (startedAt === null) {
-        return { payload: null, filename: null, saveError: null }
+        return { payload: null, sessionId: null, saveError: null }
       }
 
       for (const source of TRANSCRIPT_SOURCES) {
@@ -151,20 +150,19 @@ export function createRecordingPipeline(deps?: { api?: RecordingApi }): Recordin
       }
 
       if (liveTranscriptState.entries.length === 0) {
-        return { payload: null, filename: null, saveError: null }
+        return { payload: null, sessionId: null, saveError: null }
       }
 
       const payload = buildSavedSessionTranscript(liveTranscriptState, startedAt, stoppedAt)
-      const filename = makeTranscriptFilename(startedAt)
 
       try {
-        await api.transcript.save(payload, filename)
-        return { payload, filename, saveError: null }
+        const { sessionId } = await api.session.save(payload)
+        return { payload, sessionId, saveError: null }
       } catch (error) {
         return {
           payload,
-          filename,
-          saveError: toErrorMessage(error, 'Failed to save transcript file.')
+          sessionId: null,
+          saveError: toErrorMessage(error, 'Failed to save session.')
         }
       }
     }
