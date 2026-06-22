@@ -11,6 +11,7 @@ type SessionNavigationState = {
   clearSelection: () => void
   goBack: () => void
   goForward: () => void
+  removeSessionFromHistory: (sessionId: string) => void
 }
 
 export const useSessionNavigationStore = create<SessionNavigationState>((set, get) => ({
@@ -73,6 +74,20 @@ export const useSessionNavigationStore = create<SessionNavigationState>((set, ge
       selectedSessionId: nextId
     })
     useDetailStore.getState().resetDetail()
+  },
+
+  removeSessionFromHistory: (sessionId) => {
+    const { selectedSessionId, past, future } = get()
+
+    if (selectedSessionId === sessionId) {
+      get().clearSelection()
+      return
+    }
+
+    set({
+      past: past.filter((id) => id !== sessionId),
+      future: future.filter((id) => id !== sessionId)
+    })
   }
 }))
 

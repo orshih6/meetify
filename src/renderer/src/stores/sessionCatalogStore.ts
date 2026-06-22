@@ -3,6 +3,7 @@ import {
   meetingSessionFromLoadResult,
   meetingSessionFromSave
 } from '@renderer/lib/sessions'
+import { useSessionNavigationStore } from '@renderer/stores/sessionNavigationStore'
 import type { MeetingSession } from '@renderer/types/meeting'
 import type { SavedSessionTranscript } from '@shared/ipc'
 import { create } from 'zustand'
@@ -15,6 +16,7 @@ type SessionCatalogState = {
   addSessionFromSave: (sessionId: string, payload: SavedSessionTranscript) => MeetingSession
   requestSummary: (sessionId: string) => Promise<void>
   loadSessionDetail: (sessionId: string) => Promise<MeetingSession | null>
+  deleteSession: (sessionId: string) => Promise<void>
 }
 
 function mergeSession(existing: MeetingSession | undefined, next: MeetingSession): MeetingSession {
@@ -92,5 +94,15 @@ export const useSessionCatalogStore = create<SessionCatalogState>((set) => ({
     }))
 
     return session
+  },
+
+  deleteSession: async (sessionId) => {
+    await window.api.session.delete(sessionId)
+
+    set((state) => ({
+      sessions: state.sessions.filter((session) => session.id !== sessionId)
+    }))
+
+    useSessionNavigationStore.getState().removeSessionFromHistory(sessionId)
   }
 }))

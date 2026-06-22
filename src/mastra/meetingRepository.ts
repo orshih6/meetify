@@ -218,3 +218,29 @@ export async function getMeetingTranscriptEntries(
   const session = await loadMeetingSession(memory, sessionId)
   return session?.transcript ?? []
 }
+
+export async function deleteMeetingSession(
+  memory: MemoryStorage,
+  sessionId: string
+): Promise<void> {
+  const thread = await memory.getThreadById({
+    threadId: sessionId,
+    resourceId: MEETIFY_RESOURCE_ID
+  })
+
+  if (!thread) {
+    throw new Error(`Meeting session not found: ${sessionId}`)
+  }
+
+  const { messages } = await memory.listMessages({
+    threadId: sessionId,
+    resourceId: MEETIFY_RESOURCE_ID,
+    perPage: false
+  })
+
+  if (messages.length > 0) {
+    await memory.deleteMessages(messages.map((message) => message.id))
+  }
+
+  await memory.deleteThread({ threadId: sessionId })
+}

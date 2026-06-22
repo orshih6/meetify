@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import { IPC_CHANNELS, type SavedSessionTranscript, type SessionLoadResult } from '@shared/ipc'
 import {
+  deleteMeetingSession,
   listMeetingSessions,
   loadMeetingSession,
   saveMeetingSession
@@ -29,4 +30,9 @@ export function registerSessionHandlers(): void {
       return loadMeetingSession(memory, sessionId)
     }
   )
+
+  ipcMain.handle(IPC_CHANNELS.session.delete, async (_event, sessionId: string) => {
+    const memory = getElectronMemoryStore()
+    await deleteMeetingSession(memory, sessionId)
+  })
 }

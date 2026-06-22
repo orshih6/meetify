@@ -26,6 +26,7 @@ declare global {
         save: (payload: SavedSessionTranscript) => Promise<SessionSaveResult>
         list: () => Promise<SessionListEntry[]>
         load: (sessionId: string) => Promise<SessionLoadResult | null>
+        delete: (sessionId: string) => Promise<void>
       }
       summary: {
         generate: (sessionId: string) => Promise<SummaryGenerateResult>

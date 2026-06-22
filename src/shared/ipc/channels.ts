@@ -5,7 +5,8 @@ export const IPC_CHANNELS = {
   session: {
     save: 'session:save',
     list: 'session:list',
-    load: 'session:load'
+    load: 'session:load',
+    delete: 'session:delete'
   },
   summary: {
     generate: 'summary:generate'

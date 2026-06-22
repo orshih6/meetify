@@ -79,7 +79,9 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.session.save, payload),
     list: (): Promise<SessionListEntry[]> => ipcRenderer.invoke(IPC_CHANNELS.session.list),
     load: (sessionId: string): Promise<SessionLoadResult | null> =>
-      ipcRenderer.invoke(IPC_CHANNELS.session.load, sessionId)
+      ipcRenderer.invoke(IPC_CHANNELS.session.load, sessionId),
+    delete: (sessionId: string): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.session.delete, sessionId)
   },
   summary: {
     generate: (sessionId: string): Promise<SummaryGenerateResult> =>
