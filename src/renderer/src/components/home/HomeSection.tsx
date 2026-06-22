@@ -40,7 +40,7 @@ export function HomeSection() {
 
   const displayElapsed = isRecording ? elapsedSeconds : 0
 
-  const isRecordDisabled = isStarting || isStopping
+  const isRecordDisabled = true
 
   return (
     <section className="border-b border-neutral-900 pt-6 pb-8">
@@ -98,6 +98,8 @@ export function HomeSection() {
           </>
         )}
       </Button>
+
+      <p className="mt-3 text-xs text-neutral-500">Live transcription is temporarily unavailable.</p>
 
       {recordingWarning ? <p className="mt-3 text-xs text-amber-500">{recordingWarning}</p> : null}
 

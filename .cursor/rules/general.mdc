@@ -6,6 +6,7 @@ alwaysApply: true
 
 # General rule
 
+- You must use node defined version on .nvmrc. (run this command in workspace: nvm use)
 - You must only work in the src/** directory and not make any changes to other files.
 - You must only use existing libraries in package.json, so don't use libraries that are not listed there.
 - Use context7 to determine the project’s library version and apply it accordingly.

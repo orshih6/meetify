@@ -4,6 +4,4 @@ out
 .DS_Store
 .eslintcache
 *.log*
-.mastra
-src/mastra/public
 .env
