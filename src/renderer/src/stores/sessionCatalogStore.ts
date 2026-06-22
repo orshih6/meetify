@@ -14,6 +14,7 @@ type SessionCatalogState = {
   loadError: string | null
   loadCatalog: () => Promise<void>
   addSessionFromSave: (sessionId: string, payload: SavedSessionTranscript) => MeetingSession
+  requestTitle: (sessionId: string) => Promise<void>
   requestSummary: (sessionId: string) => Promise<void>
   loadSessionDetail: (sessionId: string) => Promise<MeetingSession | null>
   deleteSession: (sessionId: string) => Promise<void>
@@ -58,6 +59,20 @@ export const useSessionCatalogStore = create<SessionCatalogState>((set) => ({
     }))
 
     return session
+  },
+
+  requestTitle: async (sessionId) => {
+    try {
+      const { title } = await window.api.title.generate(sessionId)
+
+      set((state) => ({
+        sessions: state.sessions.map((session) =>
+          session.id === sessionId ? { ...session, title } : session
+        )
+      }))
+    } catch {
+      // Keep the Untitled placeholder on failure.
+    }
   },
 
   requestSummary: async (sessionId) => {

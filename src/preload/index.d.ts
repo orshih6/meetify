@@ -7,6 +7,7 @@ import type {
   SessionLoadResult,
   SessionSaveResult,
   SummaryGenerateResult,
+  TitleGenerateResult,
   TranscriptionDeltaPayload,
   TranscriptionErrorPayload,
   TranscriptionSourcePayload,
@@ -30,6 +31,9 @@ declare global {
       }
       summary: {
         generate: (sessionId: string) => Promise<SummaryGenerateResult>
+      }
+      title: {
+        generate: (sessionId: string) => Promise<TitleGenerateResult>
       }
       transcription: {
         start: (sources: TranscriptSource[]) => Promise<void>

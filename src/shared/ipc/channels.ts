@@ -11,6 +11,9 @@ export const IPC_CHANNELS = {
   summary: {
     generate: 'summary:generate'
   },
+  title: {
+    generate: 'title:generate'
+  },
   transcription: {
     start: 'transcription:start',
     stop: 'transcription:stop',

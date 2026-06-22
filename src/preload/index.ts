@@ -9,6 +9,7 @@ import type {
   SessionLoadResult,
   SessionSaveResult,
   SummaryGenerateResult,
+  TitleGenerateResult,
   TranscriptionDeltaPayload,
   TranscriptionErrorPayload,
   TranscriptionSourcePayload,
@@ -86,6 +87,10 @@ const api = {
   summary: {
     generate: (sessionId: string): Promise<SummaryGenerateResult> =>
       ipcRenderer.invoke(IPC_CHANNELS.summary.generate, sessionId)
+  },
+  title: {
+    generate: (sessionId: string): Promise<TitleGenerateResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.title.generate, sessionId)
   },
   transcription: {
     start: (sources: TranscriptSource[]): Promise<void> =>

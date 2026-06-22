@@ -65,6 +65,10 @@ export type SummaryGenerateResult = {
   summary: string
 }
 
+export type TitleGenerateResult = {
+  title: string
+}
+
 export type ApiKeyStatus = {
   configured: boolean
   source: 'settings' | 'env' | 'none'

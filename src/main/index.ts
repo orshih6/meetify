@@ -8,6 +8,7 @@ import { registerMicPermissionHandlers } from './micPermission'
 import { initMastraStorage } from './mastraStorage'
 import { registerSessionHandlers } from './sessionHandlers'
 import { registerSummaryHandlers } from './summaryHandlers'
+import { registerTitleHandlers } from './titleHandlers'
 import { registerCredentialsHandlers } from './credentialsHandlers'
 import { registerSettingsHandlers } from './settingsPersistence'
 import { registerTranscriptionHandlers } from './transcription'
@@ -106,6 +107,7 @@ app.whenReady().then(async () => {
   await initMastraStorage()
   registerSessionHandlers()
   registerSummaryHandlers()
+  registerTitleHandlers()
   registerSettingsHandlers()
   registerCredentialsHandlers()
   registerTranscriptionHandlers()

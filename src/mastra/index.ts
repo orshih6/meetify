@@ -9,10 +9,11 @@ import {
   SensitiveDataFilter
 } from '@mastra/observability'
 import { meetingSummaryAgent } from './agents/meeting-summary-agent'
+import { meetingTitleAgent } from './agents/meeting-title-agent'
 import { createLibSQLStore } from './storage'
 
 export const mastra = new Mastra({
-  agents: { meetingSummaryAgent },
+  agents: { meetingSummaryAgent, meetingTitleAgent },
   storage: new MastraCompositeStore({
     id: 'composite-storage',
     default: createLibSQLStore(),

@@ -1,6 +1,7 @@
 import type { MeetingSession } from '@renderer/types/meeting'
 
 const AUTO_RECORDING_TITLE_PREFIX = /^Recording\s/i
+const UNTITLED_SESSION_TITLE = 'Untitled'
 const LIST_TITLE_MAX_LENGTH = 40
 
 export function formatDuration(seconds: number): string {
@@ -28,7 +29,10 @@ export function formatDetailDate(date: Date): string {
 }
 
 export function formatSessionListTitle(session: MeetingSession): string {
-  if (AUTO_RECORDING_TITLE_PREFIX.test(session.title)) {
+  if (
+    session.title === UNTITLED_SESSION_TITLE ||
+    AUTO_RECORDING_TITLE_PREFIX.test(session.title)
+  ) {
     return formatSessionTime(session.startedAt)
   }
 

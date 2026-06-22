@@ -17,22 +17,10 @@ type MeetingThreadMetadata = {
   summary?: string
 }
 
-function formatSessionTitle(startedAt: string): string {
-  const date = new Date(startedAt)
-  const detailDate = date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric'
-  })
-  const sessionTime = date
-    .toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    })
-    .toLowerCase()
+const UNTITLED_SESSION_TITLE = 'Untitled'
 
-  return `Recording ${detailDate} ${sessionTime}`
+function formatSessionTitle(): string {
+  return UNTITLED_SESSION_TITLE
 }
 
 function parseThreadMetadata(metadata: Record<string, unknown> | undefined): MeetingThreadMetadata {
@@ -93,7 +81,7 @@ export async function saveMeetingSession(
 ): Promise<string> {
   const sessionId = randomUUID()
   const now = new Date()
-  const title = formatSessionTitle(payload.startedAt)
+  const title = formatSessionTitle()
   const metadata: MeetingThreadMetadata = {
     startedAt: payload.startedAt,
     durationSeconds: payload.durationSeconds,
@@ -134,7 +122,7 @@ export async function listMeetingSessions(memory: MemoryStorage): Promise<Sessio
 
     return {
       sessionId: thread.id,
-      title: thread.title ?? formatSessionTitle(meta.startedAt),
+      title: thread.title ?? formatSessionTitle(),
       startedAt: meta.startedAt,
       durationSeconds: meta.durationSeconds,
       summaryStatus: meta.summaryStatus ?? (meta.summary ? 'ready' : 'processing')
@@ -166,7 +154,7 @@ export async function loadMeetingSession(
 
   return {
     sessionId: thread.id,
-    title: thread.title ?? formatSessionTitle(meta.startedAt),
+    title: thread.title ?? formatSessionTitle(),
     startedAt: meta.startedAt,
     durationSeconds: meta.durationSeconds,
     transcript,
@@ -191,7 +179,7 @@ async function updateThreadMetadata(
 
   await memory.updateThread({
     id: sessionId,
-    title: thread.title ?? formatSessionTitle(current.startedAt),
+    title: thread.title ?? formatSessionTitle(),
     metadata: nextMetadata
   })
 }
@@ -209,6 +197,40 @@ export async function saveMeetingSummary(
 
 export async function markSummaryError(memory: MemoryStorage, sessionId: string): Promise<void> {
   await updateThreadMetadata(memory, sessionId, { summaryStatus: 'error' })
+}
+
+const GENERATED_TITLE_MAX_LENGTH = 60
+
+export function normalizeGeneratedTitle(raw: string): string {
+  const trimmed = raw.trim().replace(/^["'`]+|["'`]+$/g, '')
+
+  if (!trimmed) {
+    throw new Error('Title agent returned empty response.')
+  }
+
+  if (trimmed.length <= GENERATED_TITLE_MAX_LENGTH) {
+    return trimmed
+  }
+
+  return trimmed.slice(0, GENERATED_TITLE_MAX_LENGTH).trimEnd()
+}
+
+export async function saveMeetingTitle(
+  memory: MemoryStorage,
+  sessionId: string,
+  title: string
+): Promise<void> {
+  const thread = await memory.getThreadById({ threadId: sessionId, resourceId: MEETIFY_RESOURCE_ID })
+
+  if (!thread) {
+    throw new Error(`Meeting session not found: ${sessionId}`)
+  }
+
+  await memory.updateThread({
+    id: sessionId,
+    title,
+    metadata: thread.metadata ?? {}
+  })
 }
 
 export async function getMeetingTranscriptEntries(

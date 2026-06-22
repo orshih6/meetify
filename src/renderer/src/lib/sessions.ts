@@ -1,6 +1,7 @@
 import type { MeetingSession } from '@renderer/types/meeting'
-import { formatDetailDate, formatSessionTime } from '@renderer/lib/format'
 import type { SavedSessionTranscript, SessionListEntry, SessionLoadResult } from '@shared/ipc'
+
+const UNTITLED_SESSION_TITLE = 'Untitled'
 
 export function meetingSessionFromListEntry(entry: SessionListEntry): MeetingSession {
   return {
@@ -32,7 +33,7 @@ export function meetingSessionFromSave(
 
   return {
     id: sessionId,
-    title: `Recording ${formatDetailDate(startedAt)} ${formatSessionTime(startedAt)}`,
+    title: UNTITLED_SESSION_TITLE,
     startedAt,
     durationSeconds: payload.durationSeconds,
     transcript: payload.transcript.map(({ speaker, time, text }) => ({ speaker, time, text })),

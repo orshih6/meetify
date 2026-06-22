@@ -114,6 +114,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
       if (payload && sessionId) {
         useSessionCatalogStore.getState().addSessionFromSave(sessionId, payload)
+        void useSessionCatalogStore.getState().requestTitle(sessionId)
         void useSessionCatalogStore.getState().requestSummary(sessionId)
       }
 
