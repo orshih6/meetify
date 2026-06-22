@@ -1,4 +1,6 @@
 import { SettingsField } from '@renderer/components/settings/SettingsField'
+import { panelDesc, panelTitle, surfaceBorder, surfaceMuted } from '@renderer/lib/uiClasses'
+import { cn } from '@renderer/lib/utils'
 import {
   LANGUAGE_SETTING_OPTIONS,
   SPEECH_PROVIDER_OPTIONS,
@@ -13,12 +15,10 @@ export function AudioPanel() {
     LANGUAGE_SETTING_OPTIONS.find((option) => option.value === language)?.label ?? 'English'
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <section>
-        <h2 className="text-xl font-semibold text-white">Speech Provider</h2>
-        <p className="mt-1 text-sm text-neutral-500">
-          Choose the engine that transcribes audio to text.
-        </p>
+        <h2 className={panelTitle}>Speech Provider</h2>
+        <p className={panelDesc}>Choose the engine that transcribes audio to text.</p>
         <SettingsField
           label="Speech Provider"
           options={SPEECH_PROVIDER_OPTIONS.map((option) => option.label)}
@@ -30,7 +30,7 @@ export function AudioPanel() {
         />
       </section>
 
-      <section className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4">
+      <section className={cn('rounded-xl border p-4', surfaceBorder, surfaceMuted)}>
         <div className="grid gap-4 sm:grid-cols-2">
           <SettingsField
             label="Language"
@@ -50,15 +50,15 @@ export function AudioPanel() {
             disabled
           />
         </div>
-        <p className="mt-4 flex items-start gap-2 text-xs text-neutral-500">
+        <p className="mt-4 flex items-start gap-2 text-xs text-neutral-600">
           <InformationCircleIcon className="mt-0.5 h-4 w-4 shrink-0" />
           Select the primary language being spoken in the meeting.
         </p>
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold text-white">Audio Configuration</h2>
-        <p className="mt-1 text-sm text-neutral-500">Manage input and output devices.</p>
+        <h2 className={panelTitle}>Audio Configuration</h2>
+        <p className={panelDesc}>Manage input and output devices.</p>
         <SettingsField
           label="Input Device"
           options={['Default Microphone', 'MacBook Pro Microphone', 'External USB Mic']}

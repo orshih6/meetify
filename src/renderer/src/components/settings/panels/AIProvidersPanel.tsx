@@ -1,4 +1,5 @@
 import { SettingsSecretField } from '@renderer/components/settings/SettingsSecretField'
+import { panelDesc, panelTitle } from '@renderer/lib/uiClasses'
 import { useSettingsStore } from '@renderer/stores/settingsStore'
 import { useEffect } from 'react'
 
@@ -26,12 +27,12 @@ export function AIProvidersPanel() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-white">AI Providers</h2>
-      <p className="mt-1 text-sm text-neutral-500">
+      <h2 className={panelTitle}>AI Providers</h2>
+      <p className={panelDesc}>
         Configure the OpenAI API key used for transcription and meeting summaries.
       </p>
 
-      <div className="mt-6">
+      <div className="mt-5">
         <SettingsSecretField
           label="OpenAI API Key"
           statusLabel={apiKeyStatusLabel(apiKeyStatus.source, apiKeyStatus.configured)}

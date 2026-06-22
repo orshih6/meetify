@@ -10,8 +10,8 @@ export function SessionDetailHeader() {
 
   return (
     <header className="pt-8">
-      <p className="text-sm text-neutral-500">{formatDetailDate(session.startedAt)}</p>
-      <h1 className="mt-1 text-3xl font-semibold text-white">{session.title}</h1>
+      <p className="text-xs text-neutral-500">{formatDetailDate(session.startedAt)}</p>
+      <h1 className="mt-1 text-xl font-semibold text-white">{session.title}</h1>
     </header>
   )
 }

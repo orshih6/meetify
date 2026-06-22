@@ -1,4 +1,5 @@
 import { Button } from '@headlessui/react'
+import { controlFocus, controlInput, fieldLabel } from '@renderer/lib/uiClasses'
 import { cn } from '@renderer/lib/utils'
 import { useState } from 'react'
 
@@ -60,8 +61,8 @@ export function SettingsSecretField({
   return (
     <div>
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-xs tracking-wide text-neutral-500 uppercase">{label}</p>
-        <span className="text-xs text-neutral-400">{statusLabel}</span>
+        <p className={fieldLabel}>{label}</p>
+        <span className="text-xs text-neutral-500">{statusLabel}</span>
       </div>
 
       <input
@@ -72,8 +73,9 @@ export function SettingsSecretField({
         disabled={disabled || isSaving || isClearing}
         autoComplete="off"
         className={cn(
-          'w-full rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2.5 text-sm text-white',
-          'placeholder:text-neutral-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600',
+          'w-full placeholder:text-neutral-500',
+          controlInput,
+          controlFocus,
           (disabled || isSaving || isClearing) && 'cursor-not-allowed opacity-50'
         )}
       />
@@ -84,7 +86,7 @@ export function SettingsSecretField({
           onClick={() => void handleSave()}
           disabled={disabled || isSaving || isClearing || !value.trim()}
           className={cn(
-            'rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-black',
+            'rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-black',
             'transition-opacity hover:opacity-90',
             'disabled:cursor-not-allowed disabled:opacity-40'
           )}
@@ -96,7 +98,7 @@ export function SettingsSecretField({
           onClick={() => void handleClear()}
           disabled={disabled || isSaving || isClearing}
           className={cn(
-            'rounded-lg border border-neutral-800 px-3 py-1.5 text-sm text-neutral-300',
+            'rounded-lg border border-neutral-800 px-3 py-1.5 text-xs text-neutral-300',
             'transition-colors hover:border-neutral-700 hover:text-white',
             'disabled:cursor-not-allowed disabled:opacity-40'
           )}

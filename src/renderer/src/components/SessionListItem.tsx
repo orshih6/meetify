@@ -1,8 +1,7 @@
 import { Button } from '@headlessui/react'
 import { TrashIcon } from '@heroicons/react/16/solid'
 import { DeleteSessionDialog } from '@renderer/components/DeleteSessionDialog'
-import { DurationBadge } from '@renderer/components/DurationBadge'
-import { formatSessionTime } from '@renderer/lib/format'
+import { formatSessionListMeta, formatSessionListTitle } from '@renderer/lib/format'
 import { cn } from '@renderer/lib/utils'
 import { useSessionNavigationStore } from '@renderer/stores/sessionNavigationStore'
 import type { MeetingSession } from '@renderer/types/meeting'
@@ -13,7 +12,7 @@ type SessionListItemProps = {
 }
 
 const iconButtonClass = cn(
-  'rounded p-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600'
+  'rounded p-1.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600'
 )
 
 function SessionStatusLabel({ session }: { session: MeetingSession }) {
@@ -26,9 +25,7 @@ function SessionStatusLabel({ session }: { session: MeetingSession }) {
   }
 
   return (
-    <span className="text-sm text-neutral-500 tabular-nums">
-      {formatSessionTime(session.startedAt)}
-    </span>
+    <span className="text-xs text-neutral-500 tabular-nums">{formatSessionListMeta(session)}</span>
   )
 }
 
@@ -40,19 +37,22 @@ export function SessionListItem({ session }: SessionListItemProps) {
     <>
       <div
         className={cn(
-          'group flex w-full items-center justify-between gap-4 rounded-lg px-2 py-3',
-          'transition-colors hover:bg-neutral-900/60'
+          'group flex w-full items-center gap-3',
+          'border-l-2 border-l-transparent py-2.5 pl-2',
+          'transition-colors hover:border-l-neutral-600 hover:bg-neutral-900/40'
         )}
       >
         <Button
           onClick={() => selectSession(session.id)}
           className={cn(
-            'flex min-w-0 flex-1 items-center justify-between gap-4 text-left',
+            'flex min-w-0 flex-1 items-center justify-between gap-3 text-left',
             'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600'
           )}
         >
-          <span className="truncate font-medium text-white">{session.title}</span>
-          <DurationBadge durationSeconds={session.durationSeconds} />
+          <span className="truncate text-sm font-medium text-neutral-100">
+            {formatSessionListTitle(session)}
+          </span>
+          <SessionStatusLabel session={session} />
         </Button>
 
         <Button
@@ -65,12 +65,8 @@ export function SessionListItem({ session }: SessionListItemProps) {
             'hover:text-red-400 group-hover:opacity-100 focus-visible:opacity-100'
           )}
         >
-          <TrashIcon className="h-4 w-4" />
+          <TrashIcon className="h-3.5 w-3.5" />
         </Button>
-
-        <div className="w-24 shrink-0 text-right">
-          <SessionStatusLabel session={session} />
-        </div>
       </div>
 
       <DeleteSessionDialog

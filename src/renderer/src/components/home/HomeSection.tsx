@@ -1,6 +1,7 @@
 import { Button, Switch } from '@headlessui/react'
 import { MicrophoneIcon, StopIcon } from '@heroicons/react/16/solid'
 import { formatDuration } from '@renderer/lib/format'
+import { surfaceBorder, surfaceMuted } from '@renderer/lib/uiClasses'
 import { cn } from '@renderer/lib/utils'
 import { useHomeRecording, useLiveTranscriptDisplay } from '@renderer/stores/homeStore'
 import { useEffect, useState } from 'react'
@@ -39,7 +40,7 @@ function DetectableToggle() {
     <div className="flex items-center justify-between gap-4">
       <div>
         <p className="text-sm font-medium text-white">Auto-detect meetings</p>
-        <p className="mt-1 text-sm text-neutral-500">Automatically detect when a meeting starts</p>
+        <p className="mt-1 text-xs text-neutral-600">Automatically detect when a meeting starts</p>
       </div>
       <Switch
         checked={isDetectable}
@@ -90,7 +91,7 @@ function RecordingControls() {
         onClick={handleRecordClick}
         disabled={isRecordDisabled}
         className={cn(
-          'mt-6 flex w-full items-center justify-center gap-2 rounded-full px-4 py-3',
+          'mt-6 flex w-full items-center justify-center gap-2 rounded-full px-4 py-2.5',
           'text-sm font-medium transition-colors',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600',
           'disabled:cursor-not-allowed disabled:opacity-60',
@@ -127,7 +128,7 @@ function LiveTranscriptPanel() {
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-900/50 p-4">
+    <div className={cn('mt-4 rounded-xl border p-4', surfaceBorder, surfaceMuted)}>
       <p className="text-xs font-medium tracking-wide text-neutral-500 uppercase">
         Live transcript
       </p>
@@ -138,7 +139,7 @@ function LiveTranscriptPanel() {
 
 export function HomeSection() {
   return (
-    <section className="border-b border-neutral-900 pt-6 pb-8">
+    <section className="border-b border-neutral-900/80 pt-6 pb-8">
       <DetectableToggle />
       <RecordingControls />
       <LiveTranscriptPanel />

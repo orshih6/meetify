@@ -32,14 +32,14 @@ export function SessionDetailTabs() {
     : (session?.summary ?? DEFAULT_SUMMARY_MARKDOWN)
 
   return (
-    <div className="mt-8 flex items-center justify-between gap-4">
+    <div className="mt-6 flex items-center justify-between gap-4">
       <TabList className="inline-flex rounded-full bg-neutral-900/80 p-1">
         {TABS.map((label) => (
           <Tab
             key={label}
             className={({ selected }) =>
               cn(
-                'rounded-full px-4 py-1.5 text-sm outline-none',
+                'rounded-full px-3 py-1 text-xs outline-none',
                 selected ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-neutral-200'
               )
             }
@@ -52,7 +52,7 @@ export function SessionDetailTabs() {
       <Button
         onClick={() => void copyToClipboard(copyContent)}
         className={cn(
-          'flex shrink-0 items-center gap-1.5 text-sm text-neutral-400',
+          'flex shrink-0 items-center gap-1.5 text-xs text-neutral-500',
           'transition-colors hover:text-white',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600'
         )}

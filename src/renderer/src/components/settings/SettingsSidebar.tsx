@@ -1,5 +1,6 @@
 import { SettingsSectionButton } from '@renderer/components/settings/SettingsSectionButton'
 import { SETTINGS_NAV_ITEMS } from '@renderer/components/settings/settingsNav'
+import { controlFocus, fieldLabel, surfaceBorder } from '@renderer/lib/uiClasses'
 import { cn } from '@renderer/lib/utils'
 import { useSettingsStore } from '@renderer/stores/settingsStore'
 import { Button } from '@headlessui/react'
@@ -11,8 +12,8 @@ export function SettingsSidebar() {
   const closeSettings = useSettingsStore((state) => state.closeSettings)
 
   return (
-    <aside className="flex w-52 shrink-0 flex-col border-r border-neutral-800 p-3">
-      <p className="px-2 text-xs tracking-wide text-neutral-500 uppercase">Settings</p>
+    <aside className={cn('flex w-52 shrink-0 flex-col border-r p-3', surfaceBorder)}>
+      <p className={cn('px-2', fieldLabel)}>Settings</p>
 
       <nav className="mt-3 flex flex-col gap-0.5">
         {SETTINGS_NAV_ITEMS.map((item) => (
@@ -29,9 +30,9 @@ export function SettingsSidebar() {
         <Button
           onClick={closeSettings}
           className={cn(
-            'flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm text-neutral-400',
+            'flex w-full items-center gap-2 rounded-lg px-2 py-2 text-xs text-neutral-500',
             'transition-colors hover:text-white',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600'
+            controlFocus
           )}
         >
           <XMarkIcon className="h-4 w-4" />

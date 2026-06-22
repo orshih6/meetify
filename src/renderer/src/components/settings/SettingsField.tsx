@@ -1,5 +1,6 @@
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/16/solid'
+import { controlFocus, controlInput, fieldLabel } from '@renderer/lib/uiClasses'
 import { cn } from '@renderer/lib/utils'
 
 type SettingsFieldProps = {
@@ -27,14 +28,14 @@ export function SettingsField({
 
   return (
     <div className={className}>
-      <p className="mb-2 text-xs tracking-wide text-neutral-500 uppercase">{label}</p>
+      <p className={cn('mb-2', fieldLabel)}>{label}</p>
       <Listbox value={selected} onChange={(next) => onChange?.(next)} disabled={disabled}>
         <div className="relative">
           <ListboxButton
             className={cn(
-              'flex w-full items-center justify-between rounded-lg border border-neutral-800',
-              'bg-neutral-900 px-3 py-2.5 text-sm text-white',
-              'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600',
+              'flex w-full items-center justify-between',
+              controlInput,
+              controlFocus,
               disabled && 'cursor-not-allowed opacity-50'
             )}
           >

@@ -6,14 +6,14 @@ export function TranscriptPanel() {
 
   if (!session?.transcript?.length) {
     return (
-      <section className="mt-8">
-        <p className="text-sm text-neutral-500">Transcript will appear here</p>
+      <section className="mt-6">
+        <p className="text-xs text-neutral-600">Transcript will appear here</p>
       </section>
     )
   }
 
   return (
-    <section className="mt-8 space-y-6">
+    <section className="mt-6 space-y-5">
       {session.transcript.map((entry, index) => (
         <TranscriptEntry key={`${entry.speaker}-${entry.time}-${index}`} entry={entry} />
       ))}

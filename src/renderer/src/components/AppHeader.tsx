@@ -48,7 +48,8 @@ export function AppHeader() {
     <header
       className={cn(
         'app-header-drag flex h-12 shrink-0 items-center justify-between',
-        'border-b border-neutral-900/50 bg-black px-4'
+        'border-b bg-black px-4',
+        'border-neutral-900/80'
       )}
     >
       <div className={cn('app-header-no-drag flex items-center gap-0.5', IS_MAC && 'pl-[72px]')}>

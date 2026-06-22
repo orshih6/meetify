@@ -5,6 +5,7 @@ import { AIProvidersPanel } from '@renderer/components/settings/panels/AIProvide
 import { AudioPanel } from '@renderer/components/settings/panels/AudioPanel'
 import { KeybindsPanel } from '@renderer/components/settings/panels/KeybindsPanel'
 import { cn } from '@renderer/lib/utils'
+import { surfaceBorder } from '@renderer/lib/uiClasses'
 import { useSettingsStore, type SettingsSection } from '@renderer/stores/settingsStore'
 
 function SettingsContent({ section }: { section: SettingsSection }) {
@@ -39,13 +40,14 @@ export function SettingsModal() {
         <DialogPanel
           transition
           className={cn(
-            'flex h-[520px] w-full max-w-4xl overflow-hidden rounded-2xl',
-            'border border-neutral-800 bg-neutral-950',
+            'flex h-[480px] w-full max-w-4xl overflow-hidden rounded-2xl',
+            'border bg-neutral-950',
+            surfaceBorder,
             'transition-opacity data-closed:opacity-0'
           )}
         >
           <SettingsSidebar />
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-5">
             <SettingsContent section={activeSection} />
           </div>
         </DialogPanel>

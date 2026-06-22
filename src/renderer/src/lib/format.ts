@@ -1,3 +1,8 @@
+import type { MeetingSession } from '@renderer/types/meeting'
+
+const AUTO_RECORDING_TITLE_PREFIX = /^Recording\s/i
+const LIST_TITLE_MAX_LENGTH = 40
+
 export function formatDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60
@@ -20,4 +25,20 @@ export function formatDetailDate(date: Date): string {
     month: 'short',
     day: 'numeric'
   })
+}
+
+export function formatSessionListTitle(session: MeetingSession): string {
+  if (AUTO_RECORDING_TITLE_PREFIX.test(session.title)) {
+    return formatSessionTime(session.startedAt)
+  }
+
+  if (session.title.length <= LIST_TITLE_MAX_LENGTH) {
+    return session.title
+  }
+
+  return `${session.title.slice(0, LIST_TITLE_MAX_LENGTH - 1)}…`
+}
+
+export function formatSessionListMeta(session: MeetingSession): string {
+  return `${formatDuration(session.durationSeconds)} · ${formatSessionTime(session.startedAt)}`
 }

@@ -1,4 +1,5 @@
 import { Button, Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
+import { panelTitle, surfaceBorder } from '@renderer/lib/uiClasses'
 import { cn } from '@renderer/lib/utils'
 import { useSessionCatalogStore } from '@renderer/stores/sessionCatalogStore'
 import type { MeetingSession } from '@renderer/types/meeting'
@@ -52,14 +53,15 @@ export function DeleteSessionDialog({ session, open, onClose }: DeleteSessionDia
         <DialogPanel
           transition
           className={cn(
-            'w-full max-w-md rounded-2xl border border-neutral-800 bg-neutral-950 p-6',
+            'w-full max-w-md rounded-2xl border bg-neutral-950 p-6',
+            surfaceBorder,
             'transition-opacity data-closed:opacity-0'
           )}
         >
-          <DialogTitle className="text-lg font-medium text-white">Delete meeting?</DialogTitle>
+          <DialogTitle className={panelTitle}>Delete meeting?</DialogTitle>
 
-          <p className="mt-2 text-sm text-neutral-400">
-            This will permanently delete <span className="text-neutral-200">{session.title}</span>.
+          <p className="mt-2 text-xs text-neutral-500">
+            This will permanently delete <span className="text-neutral-300">{session.title}</span>.
             This action cannot be undone.
           </p>
 
@@ -71,7 +73,7 @@ export function DeleteSessionDialog({ session, open, onClose }: DeleteSessionDia
               onClick={handleClose}
               disabled={isDeleting}
               className={cn(
-                'rounded-lg border border-neutral-800 px-4 py-2 text-sm text-neutral-300',
+                'rounded-lg border border-neutral-800 px-4 py-1.5 text-xs text-neutral-300',
                 'transition-colors hover:border-neutral-700 hover:text-white',
                 'disabled:cursor-not-allowed disabled:opacity-40'
               )}
@@ -83,7 +85,7 @@ export function DeleteSessionDialog({ session, open, onClose }: DeleteSessionDia
               onClick={() => void handleDelete()}
               disabled={isDeleting}
               className={cn(
-                'rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white',
+                'rounded-lg bg-red-600 px-4 py-1.5 text-xs font-medium text-white',
                 'transition-colors hover:bg-red-500',
                 'disabled:cursor-not-allowed disabled:opacity-40'
               )}

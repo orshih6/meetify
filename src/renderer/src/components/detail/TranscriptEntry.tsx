@@ -11,7 +11,7 @@ export function TranscriptEntry({ entry }: TranscriptEntryProps) {
         <span>{entry.speaker}</span>
         <span className="ml-2 font-mono text-neutral-600">{entry.time}</span>
       </div>
-      <p className="mt-1 text-base text-white">{entry.text}</p>
+      <p className="mt-1 text-sm leading-relaxed text-white">{entry.text}</p>
     </div>
   )
 }

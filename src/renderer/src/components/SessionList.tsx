@@ -14,6 +14,9 @@ export function SessionList() {
       <ContentContainer className="pb-8">
         <HomeSection />
         {loadError ? <p className="mt-4 text-xs text-red-400">{loadError}</p> : null}
+        {sessions.length === 0 && !loadError ? (
+          <p className="pt-5 text-sm text-neutral-600">No meetings yet. Start a recording above.</p>
+        ) : null}
         {groups.map((group, index) => (
           <SessionDateGroup key={group.label} group={group} isFirst={index === 0} />
         ))}

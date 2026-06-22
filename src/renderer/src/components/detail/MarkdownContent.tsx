@@ -58,7 +58,7 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
     if (trimmed.startsWith('# ')) {
       flushList()
       elements.push(
-        <h1 key={key++} className="text-2xl font-semibold text-white">
+        <h1 key={key++} className="text-xl font-semibold text-white">
           {renderInline(trimmed.slice(2))}
         </h1>
       )
