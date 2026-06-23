@@ -1,14 +1,11 @@
 import type { MeetingSession } from '@renderer/types/meeting'
+import { formatDuration } from '@shared/transcript'
 
 const AUTO_RECORDING_TITLE_PREFIX = /^Recording\s/i
 const UNTITLED_SESSION_TITLE = 'Untitled'
 const LIST_TITLE_MAX_LENGTH = 40
 
-export function formatDuration(seconds: number): string {
-  const minutes = Math.floor(seconds / 60)
-  const remainingSeconds = seconds % 60
-  return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`
-}
+export { formatDuration }
 
 export function formatSessionTime(date: Date): string {
   return date

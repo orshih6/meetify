@@ -2,12 +2,17 @@ export type TranscriptSource = 'me' | 'interviewer'
 
 export type TranscriptionDeltaPayload = {
   source: TranscriptSource
+  itemId: string
+  contentIndex?: number
   delta: string
+  itemStartedAtMs?: number
 }
 
 export type TranscriptionUtterancePayload = {
   source: TranscriptSource
+  itemId: string
   text: string
+  itemStartedAtMs: number
 }
 
 export type TranscriptionSourcePayload = {
@@ -26,9 +31,9 @@ export type TranscriptionAudioPayload = {
 
 export type SavedTranscriptEntry = {
   speaker: string
-  time: string
   text: string
-  elapsedSeconds: number
+  itemId: string
+  itemStartedAtMs: number
 }
 
 export type SavedSessionTranscript = {
@@ -39,8 +44,31 @@ export type SavedSessionTranscript = {
 
 export type SummaryStatus = 'processing' | 'ready' | 'error'
 
-export type SessionSaveResult = {
+export type SessionStatus = 'recording' | 'completed'
+
+export type SessionAppendTranscriptPayload = {
   sessionId: string
+  entry: SavedTranscriptEntry
+}
+
+export type SessionFinalizeRecordingPayload = {
+  sessionId: string
+  stoppedAt: number
+}
+
+export type SessionFinalizeRecordingResult = {
+  sessionId: string
+  durationSeconds: number
+  entryCount: number
+}
+
+export type TranscriptionStartResult = {
+  sessionId: string
+}
+
+export type TranscriptionStopResult = {
+  sessionId: string | null
+  entryCount: number
 }
 
 export type SessionListEntry = {

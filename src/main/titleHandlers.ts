@@ -22,7 +22,7 @@ export function registerTitleHandlers(): void {
     }
 
     const transcript = await getMeetingTranscriptEntries(memory, sessionId)
-    const formattedTranscript = formatTranscriptForSummary(transcript)
+    const formattedTranscript = formatTranscriptForSummary(transcript, session.startedAt)
     const prompt = `Generate a short meeting title for the following transcript:\n\n${formattedTranscript}`
     const apiKey = await getOpenAiApiKey()
     const response = await meetingTitleAgent.generate(prompt, {

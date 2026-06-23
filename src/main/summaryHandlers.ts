@@ -23,7 +23,7 @@ export function registerSummaryHandlers(): void {
       }
 
       const transcript = await getMeetingTranscriptEntries(memory, sessionId)
-      const formattedTranscript = formatTranscriptForSummary(transcript)
+      const formattedTranscript = formatTranscriptForSummary(transcript, session.startedAt)
       const prompt = `Summarize the following meeting transcript:\n\n${formattedTranscript}`
       const apiKey = await getOpenAiApiKey()
       const response = await meetingSummaryAgent.generate(prompt, {

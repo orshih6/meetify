@@ -1,11 +1,10 @@
 import {
   meetingSessionFromListEntry,
-  meetingSessionFromLoadResult,
-  meetingSessionFromSave
+  meetingSessionFromLoadResult
 } from '@renderer/lib/sessions'
 import { useSessionNavigationStore } from '@renderer/stores/sessionNavigationStore'
 import type { MeetingSession } from '@renderer/types/meeting'
-import type { SavedSessionTranscript } from '@shared/ipc'
+import type { SessionLoadResult } from '@shared/ipc'
 import { create } from 'zustand'
 
 const UNTITLED_SESSION_TITLE = 'Untitled'
@@ -15,7 +14,7 @@ type SessionCatalogState = {
   isLoading: boolean
   loadError: string | null
   loadCatalog: () => Promise<void>
-  addSessionFromSave: (sessionId: string, payload: SavedSessionTranscript) => MeetingSession
+  addSessionFromLoad: (result: SessionLoadResult) => MeetingSession
   requestTitle: (sessionId: string) => Promise<void>
   requestSummary: (sessionId: string) => Promise<void>
   loadSessionDetail: (sessionId: string) => Promise<MeetingSession | null>
@@ -68,8 +67,8 @@ export const useSessionCatalogStore = create<SessionCatalogState>((set) => ({
     }
   },
 
-  addSessionFromSave: (sessionId, payload) => {
-    const session = meetingSessionFromSave(sessionId, payload)
+  addSessionFromLoad: (result) => {
+    const session = meetingSessionFromLoadResult(result)
 
     set((state) => ({
       sessions: [session, ...state.sessions.filter((item) => item.id !== session.id)]

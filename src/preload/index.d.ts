@@ -2,15 +2,18 @@ import { ElectronAPI } from '@electron-toolkit/preload'
 import type {
   ApiKeyStatus,
   AppSettings,
-  SavedSessionTranscript,
+  SessionAppendTranscriptPayload,
+  SessionFinalizeRecordingPayload,
+  SessionFinalizeRecordingResult,
   SessionListEntry,
   SessionLoadResult,
-  SessionSaveResult,
   SummaryGenerateResult,
   TitleGenerateResult,
   TranscriptionDeltaPayload,
   TranscriptionErrorPayload,
   TranscriptionSourcePayload,
+  TranscriptionStartResult,
+  TranscriptionStopResult,
   TranscriptionUtterancePayload,
   TranscriptSource
 } from '@shared/ipc'
@@ -24,7 +27,10 @@ declare global {
         requestMicPermission: () => Promise<boolean>
       }
       session: {
-        save: (payload: SavedSessionTranscript) => Promise<SessionSaveResult>
+        appendTranscript: (payload: SessionAppendTranscriptPayload) => Promise<void>
+        finalizeRecording: (
+          payload: SessionFinalizeRecordingPayload
+        ) => Promise<SessionFinalizeRecordingResult>
         list: () => Promise<SessionListEntry[]>
         load: (sessionId: string) => Promise<SessionLoadResult | null>
         delete: (sessionId: string) => Promise<void>
@@ -36,8 +42,8 @@ declare global {
         generate: (sessionId: string) => Promise<TitleGenerateResult>
       }
       transcription: {
-        start: (sources: TranscriptSource[]) => Promise<void>
-        stop: () => Promise<void>
+        start: (sources: TranscriptSource[]) => Promise<TranscriptionStartResult>
+        stop: () => Promise<TranscriptionStopResult>
         sendAudio: (source: TranscriptSource, pcm: Int16Array) => void
         onDelta: (callback: (payload: TranscriptionDeltaPayload) => void) => () => void
         onUtterance: (callback: (payload: TranscriptionUtterancePayload) => void) => () => void

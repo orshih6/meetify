@@ -1,135 +1,133 @@
-import { formatDuration } from '@renderer/lib/format'
-import type { SavedSessionTranscript, SavedTranscriptEntry, TranscriptSource } from '@shared/ipc'
+import { buildTranscriptEntry, SOURCE_LABELS } from '@shared/transcript'
+import type { SavedTranscriptEntry, TranscriptSource } from '@shared/ipc'
 
-export const SOURCE_LABELS: Record<TranscriptSource, string> = {
-  me: 'Me',
-  interviewer: 'Them'
-}
+export { SOURCE_LABELS }
 
 export const TRANSCRIPT_SOURCES = [
   'me',
   'interviewer'
 ] as const satisfies readonly TranscriptSource[]
 
-export type StoredTranscriptEntry = SavedTranscriptEntry & {
-  utteranceStartedAtMs: number
-}
-
 export type LiveTranscriptState = {
-  entries: StoredTranscriptEntry[]
-  partials: Record<TranscriptSource, string>
-  utteranceStartedAt: Record<TranscriptSource, number | null>
-  lastActivityAt: Record<TranscriptSource, number>
+  entries: SavedTranscriptEntry[]
+  partials: Record<string, string>
+  itemSource: Record<string, TranscriptSource>
+  itemStartedAtMs: Record<string, number>
 }
 
 export function createLiveTranscriptState(): LiveTranscriptState {
   return {
     entries: [],
-    partials: { me: '', interviewer: '' },
-    utteranceStartedAt: { me: null, interviewer: null },
-    lastActivityAt: { me: 0, interviewer: 0 }
-  }
-}
-
-function elapsedSecondsFromStart(utteranceStartedAtMs: number, recordingStartedAt: number): number {
-  return Math.max(0, Math.floor((utteranceStartedAtMs - recordingStartedAt) / 1000))
-}
-
-function finalizePartial(
-  state: LiveTranscriptState,
-  source: TranscriptSource,
-  text: string,
-  recordingStartedAt: number
-): LiveTranscriptState {
-  const trimmed = text.trim()
-
-  if (!trimmed) {
-    return {
-      ...state,
-      partials: { ...state.partials, [source]: '' },
-      utteranceStartedAt: { ...state.utteranceStartedAt, [source]: null }
-    }
-  }
-
-  const utteranceStartedAtMs = state.utteranceStartedAt[source] ?? Date.now()
-  const elapsedSeconds = elapsedSecondsFromStart(utteranceStartedAtMs, recordingStartedAt)
-
-  const entry: StoredTranscriptEntry = {
-    speaker: SOURCE_LABELS[source],
-    time: formatDuration(elapsedSeconds),
-    text: trimmed,
-    elapsedSeconds,
-    utteranceStartedAtMs
-  }
-
-  return {
-    ...state,
-    entries: [...state.entries, entry],
-    partials: { ...state.partials, [source]: '' },
-    utteranceStartedAt: { ...state.utteranceStartedAt, [source]: null }
+    partials: {},
+    itemSource: {},
+    itemStartedAtMs: {}
   }
 }
 
 export function appendDelta(
   state: LiveTranscriptState,
   source: TranscriptSource,
-  delta: string
+  itemId: string,
+  delta: string,
+  itemStartedAtMs?: number
 ): LiveTranscriptState {
-  const now = Date.now()
-  const isFirstDelta = state.partials[source].length === 0
+  const nextItemStartedAtMs = { ...state.itemStartedAtMs }
+
+  if (itemStartedAtMs !== undefined && nextItemStartedAtMs[itemId] === undefined) {
+    nextItemStartedAtMs[itemId] = itemStartedAtMs
+  }
 
   return {
     ...state,
     partials: {
       ...state.partials,
-      [source]: state.partials[source] + delta
+      [itemId]: (state.partials[itemId] ?? '') + delta
     },
-    utteranceStartedAt: {
-      ...state.utteranceStartedAt,
-      [source]: isFirstDelta ? now : state.utteranceStartedAt[source]
-    },
-    lastActivityAt: { ...state.lastActivityAt, [source]: now }
+    itemSource: { ...state.itemSource, [itemId]: source },
+    itemStartedAtMs: nextItemStartedAtMs
   }
 }
 
 export function finalizeUtterance(
   state: LiveTranscriptState,
   source: TranscriptSource,
-  text: string | undefined,
-  recordingStartedAt: number
+  itemId: string,
+  text: string,
+  itemStartedAtMs: number
 ): LiveTranscriptState {
-  const utteranceText = text ?? state.partials[source]
-  return finalizePartial(state, source, utteranceText, recordingStartedAt)
+  const trimmed = text.trim()
+  const nextPartials = { ...state.partials }
+  delete nextPartials[itemId]
+
+  const nextItemSource = { ...state.itemSource }
+  delete nextItemSource[itemId]
+
+  const nextItemStartedAtMs = { ...state.itemStartedAtMs }
+  delete nextItemStartedAtMs[itemId]
+
+  if (!trimmed) {
+    return {
+      entries: state.entries,
+      partials: nextPartials,
+      itemSource: nextItemSource,
+      itemStartedAtMs: nextItemStartedAtMs
+    }
+  }
+
+  const entry = buildTranscriptEntry({ source, text: trimmed, itemId, itemStartedAtMs })
+
+  return {
+    entries: [...state.entries, entry],
+    partials: nextPartials,
+    itemSource: nextItemSource,
+    itemStartedAtMs: nextItemStartedAtMs
+  }
 }
 
-export function finalizePartialOnEnd(
+export function getLiveDisplayTextBySource(
   state: LiveTranscriptState,
-  source: TranscriptSource,
-  recordingStartedAt: number
-): LiveTranscriptState {
-  return finalizePartial(state, source, state.partials[source], recordingStartedAt)
-}
+  source: TranscriptSource
+): string {
+  const speaker = SOURCE_LABELS[source]
 
-export function getLiveDisplayText(state: LiveTranscriptState): string {
-  const finalized = state.entries.map((entry) => entry.text).join(' ')
-  const streaming = Object.values(state.partials).filter(Boolean).join(' ')
+  const finalized = state.entries
+    .filter((entry) => entry.speaker === speaker)
+    .toSorted((a, b) => a.itemStartedAtMs - b.itemStartedAtMs)
+    .map((entry) => entry.text)
+    .join(' ')
+
+  const streaming = Object.entries(state.partials)
+    .filter(([itemId]) => state.itemSource[itemId] === source)
+    .toSorted(
+      ([itemIdA], [itemIdB]) =>
+        (state.itemStartedAtMs[itemIdA] ?? 0) - (state.itemStartedAtMs[itemIdB] ?? 0)
+    )
+    .map(([, text]) => text)
+    .join(' ')
+
   return [finalized, streaming].filter(Boolean).join(' ')
 }
 
-export function getStoredTranscriptEntries(state: LiveTranscriptState): SavedTranscriptEntry[] {
-  return state.entries
-    .toSorted((a, b) => a.elapsedSeconds - b.elapsedSeconds)
-    .map(({ speaker, time, text, elapsedSeconds }) => ({ speaker, time, text, elapsedSeconds }))
-}
+export function getPendingPartialEntries(state: LiveTranscriptState): SavedTranscriptEntry[] {
+  const entries: SavedTranscriptEntry[] = []
 
-export function buildSavedSessionTranscript(
-  state: LiveTranscriptState,
-  recordingStartedAt: number,
-  stoppedAt: number
-): SavedSessionTranscript {
-  return {
-    startedAt: new Date(recordingStartedAt).toISOString(),
-    durationSeconds: Math.max(0, Math.floor((stoppedAt - recordingStartedAt) / 1000)),
-    transcript: getStoredTranscriptEntries(state)
+  for (const [itemId, text] of Object.entries(state.partials)) {
+    const trimmed = text.trim()
+
+    if (!trimmed) {
+      continue
+    }
+
+    const source = state.itemSource[itemId]
+
+    if (!source) {
+      continue
+    }
+
+    const itemStartedAtMs = state.itemStartedAtMs[itemId] ?? Date.now()
+
+    entries.push(buildTranscriptEntry({ source, text: trimmed, itemId, itemStartedAtMs }))
   }
+
+  return entries
 }

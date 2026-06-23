@@ -1,9 +1,10 @@
 import {
   createRecordingPipeline,
-  getLiveDisplayText,
+  getLiveDisplayTextBySource,
   type RecordingPipeline
 } from '@renderer/lib/recording'
 import { useSessionCatalogStore } from '@renderer/stores/sessionCatalogStore'
+import type { TranscriptSource } from '@shared/ipc'
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -20,10 +21,11 @@ type HomeState = {
   recordingError: string | null
   recordingWarning: string | null
   recordingStartedAt: number | null
+  activeSources: TranscriptSource[]
   liveTranscriptVersion: number
   startRecording: () => Promise<void>
   stopRecording: () => Promise<void>
-  getLiveTranscriptText: () => string
+  getLiveTranscriptBySource: () => { me: string; them: string }
 }
 
 let pipelineUnsubscribe: (() => void) | null = null
@@ -35,9 +37,13 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   recordingError: null,
   recordingWarning: null,
   recordingStartedAt: null,
+  activeSources: [],
   liveTranscriptVersion: 0,
 
-  getLiveTranscriptText: () => getLiveDisplayText(recordingPipeline.getTranscriptState()),
+  getLiveTranscriptBySource: () => ({
+    me: getLiveDisplayTextBySource(recordingPipeline.getTranscriptState(), 'me'),
+    them: getLiveDisplayTextBySource(recordingPipeline.getTranscriptState(), 'interviewer')
+  }),
 
   startRecording: async () => {
     const { isRecording, isStarting } = get()
@@ -50,7 +56,8 @@ export const useHomeStore = create<HomeState>((set, get) => ({
       isStarting: true,
       recordingError: null,
       recordingWarning: null,
-      recordingStartedAt: null
+      recordingStartedAt: null,
+      activeSources: []
     })
 
     pipelineUnsubscribe?.()
@@ -72,13 +79,14 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 
     try {
       const startedAt = Date.now()
-      const { warning } = await recordingPipeline.start()
+      const { warning, sources } = await recordingPipeline.start()
 
       set({
         isRecording: true,
         isStarting: false,
         recordingStartedAt: startedAt,
-        recordingWarning: warning
+        recordingWarning: warning,
+        activeSources: sources
       })
     } catch (error) {
       pipelineUnsubscribe?.()
@@ -87,6 +95,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
         isStarting: false,
         isRecording: false,
         recordingStartedAt: null,
+        activeSources: [],
         recordingError: toErrorMessage(error, 'Failed to start recording.')
       })
     }
@@ -102,21 +111,26 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     set({ isStopping: true, recordingError: null })
 
     try {
-      const { payload, sessionId, saveError } = await recordingPipeline.stop()
+      const { sessionId, saveError } = await recordingPipeline.stop()
 
       pipelineUnsubscribe?.()
       pipelineUnsubscribe = null
 
-      if (payload && sessionId) {
-        useSessionCatalogStore.getState().addSessionFromSave(sessionId, payload)
-        void useSessionCatalogStore.getState().requestTitle(sessionId)
-        void useSessionCatalogStore.getState().requestSummary(sessionId)
+      if (sessionId) {
+        const loaded = await window.api.session.load(sessionId)
+
+        if (loaded) {
+          useSessionCatalogStore.getState().addSessionFromLoad(loaded)
+          void useSessionCatalogStore.getState().requestTitle(sessionId)
+          void useSessionCatalogStore.getState().requestSummary(sessionId)
+        }
       }
 
       set((state) => ({
         isRecording: false,
         isStopping: false,
         recordingStartedAt: null,
+        activeSources: [],
         liveTranscriptVersion: state.liveTranscriptVersion + 1,
         recordingError: saveError
       }))
@@ -127,6 +141,7 @@ export const useHomeStore = create<HomeState>((set, get) => ({
         isRecording: false,
         isStopping: false,
         recordingStartedAt: null,
+        activeSources: [],
         recordingError: toErrorMessage(error, 'Failed to stop recording.')
       })
     }
@@ -148,8 +163,19 @@ export function useHomeRecording() {
   )
 }
 
-export function useLiveTranscriptDisplay(): string {
+export function useLiveTranscriptBySource(): {
+  me: string
+  them: string
+  hasInterviewer: boolean
+} {
   const version = useHomeStore((state) => state.liveTranscriptVersion)
+  const activeSources = useHomeStore((state) => state.activeSources)
   void version
-  return useHomeStore.getState().getLiveTranscriptText()
+  const { me, them } = useHomeStore.getState().getLiveTranscriptBySource()
+
+  return {
+    me,
+    them,
+    hasInterviewer: activeSources.includes('interviewer')
+  }
 }

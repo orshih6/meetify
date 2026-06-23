@@ -10,3 +10,4 @@ src/mastra/public
 mastra.db
 mastra.db-*
 *.duckdb.wal
+*.tsbuildinfo

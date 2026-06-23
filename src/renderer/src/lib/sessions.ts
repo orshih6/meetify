@@ -1,7 +1,6 @@
 import type { MeetingSession } from '@renderer/types/meeting'
-import type { SavedSessionTranscript, SessionListEntry, SessionLoadResult } from '@shared/ipc'
-
-const UNTITLED_SESSION_TITLE = 'Untitled'
+import type { SessionListEntry, SessionLoadResult } from '@shared/ipc'
+import { formatEntryTime } from '@shared/transcript'
 
 export function meetingSessionFromListEntry(entry: SessionListEntry): MeetingSession {
   return {
@@ -14,6 +13,8 @@ export function meetingSessionFromListEntry(entry: SessionListEntry): MeetingSes
 }
 
 export function meetingSessionFromLoadResult(result: SessionLoadResult): MeetingSession {
+  const recordingStartedAtMs = new Date(result.startedAt).getTime()
+
   return {
     id: result.sessionId,
     title: result.title,
@@ -21,24 +22,16 @@ export function meetingSessionFromLoadResult(result: SessionLoadResult): Meeting
     durationSeconds: result.durationSeconds,
     summary: result.summary,
     summaryStatus: result.summaryStatus,
-    transcript: result.transcript.map(({ speaker, time, text }) => ({ speaker, time, text }))
+    transcript: result.transcript.map((entry) => ({
+      speaker: entry.speaker,
+      time: formatEntryTime(entry.itemStartedAtMs, recordingStartedAtMs),
+      text: entry.text
+    }))
   }
 }
 
-export function meetingSessionFromSave(
-  sessionId: string,
-  payload: SavedSessionTranscript
-): MeetingSession {
-  const startedAt = new Date(payload.startedAt)
-
-  return {
-    id: sessionId,
-    title: UNTITLED_SESSION_TITLE,
-    startedAt,
-    durationSeconds: payload.durationSeconds,
-    transcript: payload.transcript.map(({ speaker, time, text }) => ({ speaker, time, text })),
-    summaryStatus: 'processing'
-  }
+export function meetingSessionFromLoad(result: SessionLoadResult): MeetingSession {
+  return meetingSessionFromLoadResult(result)
 }
 
 export type SessionDateGroup = {

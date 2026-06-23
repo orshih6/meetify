@@ -4,15 +4,18 @@ import { IPC_CHANNELS } from '@shared/ipc'
 import type {
   ApiKeyStatus,
   AppSettings,
-  SavedSessionTranscript,
+  SessionAppendTranscriptPayload,
+  SessionFinalizeRecordingPayload,
+  SessionFinalizeRecordingResult,
   SessionListEntry,
   SessionLoadResult,
-  SessionSaveResult,
   SummaryGenerateResult,
   TitleGenerateResult,
   TranscriptionDeltaPayload,
   TranscriptionErrorPayload,
   TranscriptionSourcePayload,
+  TranscriptionStartResult,
+  TranscriptionStopResult,
   TranscriptionUtterancePayload,
   TranscriptSource
 } from '@shared/ipc'
@@ -88,8 +91,12 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.recording.requestMicPermission)
   },
   session: {
-    save: (payload: SavedSessionTranscript): Promise<SessionSaveResult> =>
-      ipcRenderer.invoke(IPC_CHANNELS.session.save, payload),
+    appendTranscript: (payload: SessionAppendTranscriptPayload): Promise<void> =>
+      ipcRenderer.invoke(IPC_CHANNELS.session.appendTranscript, payload),
+    finalizeRecording: (
+      payload: SessionFinalizeRecordingPayload
+    ): Promise<SessionFinalizeRecordingResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.session.finalizeRecording, payload),
     list: (): Promise<SessionListEntry[]> => ipcRenderer.invoke(IPC_CHANNELS.session.list),
     load: (sessionId: string): Promise<SessionLoadResult | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.session.load, sessionId),
@@ -105,9 +112,10 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.title.generate, sessionId)
   },
   transcription: {
-    start: (sources: TranscriptSource[]): Promise<void> =>
+    start: (sources: TranscriptSource[]): Promise<TranscriptionStartResult> =>
       ipcRenderer.invoke(IPC_CHANNELS.transcription.start, sources),
-    stop: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.transcription.stop),
+    stop: (): Promise<TranscriptionStopResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.transcription.stop),
     sendAudio: (source: TranscriptSource, pcm: Int16Array): void =>
       ipcRenderer.send(IPC_CHANNELS.transcription.audio, { source, pcm }),
     onDelta: (callback: (payload: TranscriptionDeltaPayload) => void): (() => void) =>

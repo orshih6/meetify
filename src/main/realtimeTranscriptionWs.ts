@@ -7,6 +7,9 @@ export type TranscriptionServerEvent = {
   type: string
   delta?: string
   transcript?: string
+  item_id?: string
+  content_index?: number
+  audio_start_ms?: number
   error?: { message?: string }
 }
 

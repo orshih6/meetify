@@ -1,6 +1,7 @@
 import { app } from 'electron'
 import { join } from 'path'
 import type { MemoryStorage } from '@mastra/core/storage'
+import { deleteOrphanRecordingSessions } from '../mastra/meetingRepository'
 import { createLibSQLStore, getMemoryStore } from '../mastra/storage'
 import type { LibSQLStore } from '@mastra/libsql'
 
@@ -23,6 +24,7 @@ export async function initMastraStorage(): Promise<void> {
     storage = createLibSQLStore(`file:${dbPath}`)
     await storage.init()
     memory = await getMemoryStore(storage)
+    await deleteOrphanRecordingSessions(memory)
   })()
 
   await initPromise

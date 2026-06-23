@@ -1,6 +1,14 @@
 import { ipcMain, type WebContents } from 'electron'
 import WebSocket from 'ws'
+import { buildTranscriptEntry } from '@shared/transcript'
 import { IPC_CHANNELS, type TranscriptionAudioPayload, type TranscriptSource } from '@shared/ipc'
+import {
+  appendTranscriptEntry,
+  createRecordingSession,
+  deleteMeetingSession,
+  finalizeRecordingSession
+} from '../mastra/meetingRepository'
+import { getElectronMemoryStore } from './mastraStorage'
 import { getAppSettings } from './settingsPersistence'
 import { getOpenAiApiKey } from './credentials'
 import {
@@ -24,10 +32,14 @@ type SessionState = {
   hasPendingAudio: boolean
   ready: Promise<void>
   closingIntentionally: boolean
+  itemStartedAtMs: Map<string, number>
 }
 
 type ActiveTranscription = {
   sender: WebContents
+  sessionId: string
+  startedAt: string
+  startedAtMs: number
   sessions: Map<TranscriptSource, SessionState>
 }
 
@@ -75,13 +87,31 @@ function cleanupAllSessions(): void {
   }
 }
 
+async function persistCompletedUtterance(
+  source: TranscriptSource,
+  transcript: string,
+  itemId: string,
+  session: SessionState
+): Promise<number> {
+  if (!active) {
+    return Date.now()
+  }
+
+  const itemStartedAtMs = session.itemStartedAtMs.get(itemId) ?? Date.now()
+  const entry = buildTranscriptEntry({ source, text: transcript, itemId, itemStartedAtMs })
+  const memory = getElectronMemoryStore()
+
+  await appendTranscriptEntry(memory, active.sessionId, entry, active.startedAt)
+
+  return itemStartedAtMs
+}
+
 async function createSession(
   source: TranscriptSource,
-  sender: WebContents,
-  apiKey: string
+  apiKey: string,
+  language: string
 ): Promise<void> {
   const ws = connectTranscriptionWebSocket(apiKey)
-  const language = getAppSettings().language
 
   let resolveReady!: () => void
   let rejectReady!: (error: Error) => void
@@ -98,11 +128,12 @@ async function createSession(
     commitTimer: null,
     hasPendingAudio: false,
     ready,
-    closingIntentionally: false
+    closingIntentionally: false,
+    itemStartedAtMs: new Map()
   }
 
   if (!active) {
-    active = { sender, sessions: new Map() }
+    throw new Error('Active transcription is not initialized.')
   }
 
   active.sessions.set(source, session)
@@ -146,16 +177,46 @@ async function createSession(
       return
     }
 
-    if (event.type === 'conversation.item.input_audio_transcription.delta' && event.delta) {
-      sendToRenderer(IPC_CHANNELS.transcription.delta, { source, delta: event.delta })
+    if (event.type === 'input_audio_buffer.committed' && event.item_id) {
+      session.itemStartedAtMs.set(event.item_id, Date.now())
+      return
+    }
+
+    if (
+      event.type === 'conversation.item.input_audio_transcription.delta' &&
+      event.delta &&
+      event.item_id
+    ) {
+      const itemStartedAtMs = session.itemStartedAtMs.get(event.item_id)
+      sendToRenderer(IPC_CHANNELS.transcription.delta, {
+        source,
+        itemId: event.item_id,
+        contentIndex: event.content_index,
+        delta: event.delta,
+        itemStartedAtMs
+      })
       return
     }
 
     if (
       event.type === 'conversation.item.input_audio_transcription.completed' &&
-      event.transcript
+      event.transcript &&
+      event.item_id
     ) {
-      sendToRenderer(IPC_CHANNELS.transcription.utterance, { source, text: event.transcript })
+      void persistCompletedUtterance(source, event.transcript, event.item_id, session)
+        .then((itemStartedAtMs) => {
+          sendToRenderer(IPC_CHANNELS.transcription.utterance, {
+            source,
+            itemId: event.item_id!,
+            text: event.transcript!,
+            itemStartedAtMs
+          })
+        })
+        .catch((error) => {
+          const message = error instanceof Error ? error.message : 'Failed to save transcript.'
+          sendToRenderer(IPC_CHANNELS.transcription.error, { message, source })
+        })
+
       return
     }
 
@@ -197,7 +258,7 @@ async function createSession(
   await ready
 }
 
-async function startSessions(sender: WebContents, sources: TranscriptSource[]): Promise<void> {
+async function startSessions(sender: WebContents, sources: TranscriptSource[]): Promise<string> {
   const apiKey = await getOpenAiApiKey()
 
   if (active) {
@@ -212,20 +273,32 @@ async function startSessions(sender: WebContents, sources: TranscriptSource[]): 
     }
   }
 
-  active = { sender, sessions: new Map() }
+  const startedAtMs = Date.now()
+  const startedAt = new Date(startedAtMs).toISOString()
+  const memory = getElectronMemoryStore()
+  const sessionId = await createRecordingSession(memory, startedAt)
+  const language = getAppSettings().language
+
+  active = { sender, sessionId, startedAt, startedAtMs, sessions: new Map() }
 
   try {
-    await Promise.all(uniqueSources.map((source) => createSession(source, sender, apiKey)))
+    await Promise.all(uniqueSources.map((source) => createSession(source, apiKey, language)))
   } catch (error) {
     cleanupAllSessions()
+    await deleteMeetingSession(memory, sessionId)
+    active = null
     throw error
   }
+
+  return sessionId
 }
 
-async function stopSessions(): Promise<void> {
+async function stopSessions(): Promise<{ sessionId: string | null; entryCount: number }> {
   if (!active) {
-    return
+    return { sessionId: null, entryCount: 0 }
   }
+
+  const { sessionId } = active
 
   for (const session of active.sessions.values()) {
     session.closingIntentionally = true
@@ -236,15 +309,27 @@ async function stopSessions(): Promise<void> {
   }
 
   cleanupAllSessions()
+
+  const memory = getElectronMemoryStore()
+  const stoppedAt = Date.now()
+  const { entryCount } = await finalizeRecordingSession(memory, sessionId, stoppedAt)
+
+  if (entryCount === 0) {
+    await deleteMeetingSession(memory, sessionId)
+    return { sessionId: null, entryCount: 0 }
+  }
+
+  return { sessionId, entryCount }
 }
 
 export function registerTranscriptionHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.transcription.start, async (event, sources: TranscriptSource[]) => {
-    await startSessions(event.sender, sources)
+    const sessionId = await startSessions(event.sender, sources)
+    return { sessionId }
   })
 
   ipcMain.handle(IPC_CHANNELS.transcription.stop, async () => {
-    await stopSessions()
+    return stopSessions()
   })
 
   ipcMain.on(IPC_CHANNELS.transcription.audio, (_event, payload: TranscriptionAudioPayload) => {

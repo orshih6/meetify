@@ -2,33 +2,42 @@ import { createAudioCapture } from '@renderer/lib/recording/audioCapture'
 import { createDefaultRecordingApi, type RecordingApi } from '@renderer/lib/recording/ipcAdapter'
 import {
   appendDelta,
-  buildSavedSessionTranscript,
   createLiveTranscriptState,
-  finalizePartialOnEnd,
   finalizeUtterance,
-  getLiveDisplayText,
-  TRANSCRIPT_SOURCES,
+  getLiveDisplayTextBySource,
+  getPendingPartialEntries,
   type LiveTranscriptState
 } from '@renderer/lib/recording/transcriptState'
-import type { SavedSessionTranscript, TranscriptSource } from '@shared/ipc'
+import type { TranscriptSource } from '@shared/ipc'
 
 export type RecordingEvent =
-  | { type: 'delta'; source: TranscriptSource; delta: string }
-  | { type: 'utterance'; source: TranscriptSource; text: string }
+  | {
+      type: 'delta'
+      source: TranscriptSource
+      itemId: string
+      delta: string
+      itemStartedAtMs?: number
+    }
+  | {
+      type: 'utterance'
+      source: TranscriptSource
+      itemId: string
+      text: string
+      itemStartedAtMs: number
+    }
   | { type: 'error'; message: string; source?: TranscriptSource }
   | { type: 'closed'; source: TranscriptSource }
 
 type Unsubscribe = () => void
 
 export type RecordingPipeline = {
-  start: () => Promise<{ warning: string | null }>
+  start: () => Promise<{ warning: string | null; sources: TranscriptSource[] }>
   stop: () => Promise<{
-    payload: SavedSessionTranscript | null
     sessionId: string | null
     saveError: string | null
   }>
   subscribe: (listener: (event: RecordingEvent) => void) => Unsubscribe
-  getDisplayText: () => string
+  getDisplayTextBySource: (source: TranscriptSource) => string
   getTranscriptState: () => LiveTranscriptState
 }
 
@@ -42,6 +51,7 @@ export function createRecordingPipeline(deps?: { api?: RecordingApi }): Recordin
 
   let liveTranscriptState = createLiveTranscriptState()
   let recordingStartedAt: number | null = null
+  let sessionId: string | null = null
   let listeners: Array<(event: RecordingEvent) => void> = []
   let ipcUnsubscribes: Unsubscribe[] = []
 
@@ -56,16 +66,21 @@ export function createRecordingPipeline(deps?: { api?: RecordingApi }): Recordin
       return
     }
 
-    const startedAt = recordingStartedAt
-
     if (event.type === 'delta') {
-      liveTranscriptState = appendDelta(liveTranscriptState, event.source, event.delta)
+      liveTranscriptState = appendDelta(
+        liveTranscriptState,
+        event.source,
+        event.itemId,
+        event.delta,
+        event.itemStartedAtMs
+      )
     } else if (event.type === 'utterance') {
       liveTranscriptState = finalizeUtterance(
         liveTranscriptState,
         event.source,
+        event.itemId,
         event.text,
-        startedAt
+        event.itemStartedAtMs
       )
     }
 
@@ -82,24 +97,31 @@ export function createRecordingPipeline(deps?: { api?: RecordingApi }): Recordin
   return {
     subscribe,
 
-    getDisplayText(): string {
-      return getLiveDisplayText(liveTranscriptState)
+    getDisplayTextBySource(source: TranscriptSource): string {
+      return getLiveDisplayTextBySource(liveTranscriptState, source)
     },
 
     getTranscriptState(): LiveTranscriptState {
       return liveTranscriptState
     },
 
-    async start(): Promise<{ warning: string | null }> {
+    async start(): Promise<{ warning: string | null; sources: TranscriptSource[] }> {
       liveTranscriptState = createLiveTranscriptState()
       recordingStartedAt = Date.now()
+      sessionId = null
 
       ipcUnsubscribes = [
-        api.transcription.onDelta(({ source, delta }) => {
-          handleTranscriptionEvent({ type: 'delta', source, delta })
+        api.transcription.onDelta(({ source, itemId, delta, itemStartedAtMs }) => {
+          handleTranscriptionEvent({ type: 'delta', source, itemId, delta, itemStartedAtMs })
         }),
-        api.transcription.onUtterance(({ source, text }) => {
-          handleTranscriptionEvent({ type: 'utterance', source, text })
+        api.transcription.onUtterance(({ source, itemId, text, itemStartedAtMs }) => {
+          handleTranscriptionEvent({
+            type: 'utterance',
+            source,
+            itemId,
+            text,
+            itemStartedAtMs
+          })
         }),
         api.transcription.onError(({ message, source }) => {
           emit({
@@ -114,17 +136,17 @@ export function createRecordingPipeline(deps?: { api?: RecordingApi }): Recordin
       ]
 
       const { warning, sources } = await capture.prepare()
-      await api.transcription.start(sources)
+      const startResult = await api.transcription.start(sources)
+      sessionId = startResult.sessionId
 
       capture.beginProcessing((source, pcm) => {
         api.transcription.sendAudio(source, pcm)
       })
 
-      return { warning }
+      return { warning, sources }
     },
 
     async stop(): Promise<{
-      payload: SavedSessionTranscript | null
       sessionId: string | null
       saveError: string | null
     }> {
@@ -135,32 +157,27 @@ export function createRecordingPipeline(deps?: { api?: RecordingApi }): Recordin
       }
       ipcUnsubscribes = []
 
-      await api.transcription.stop()
-
-      const stoppedAt = Date.now()
-      const startedAt = recordingStartedAt
+      const activeSessionId = sessionId
       recordingStartedAt = null
+      sessionId = null
 
-      if (startedAt === null) {
-        return { payload: null, sessionId: null, saveError: null }
+      if (activeSessionId === null) {
+        await api.transcription.stop().catch(() => undefined)
+        return { sessionId: null, saveError: null }
       }
-
-      for (const source of TRANSCRIPT_SOURCES) {
-        liveTranscriptState = finalizePartialOnEnd(liveTranscriptState, source, startedAt)
-      }
-
-      if (liveTranscriptState.entries.length === 0) {
-        return { payload: null, sessionId: null, saveError: null }
-      }
-
-      const payload = buildSavedSessionTranscript(liveTranscriptState, startedAt, stoppedAt)
 
       try {
-        const { sessionId } = await api.session.save(payload)
-        return { payload, sessionId, saveError: null }
+        const pendingEntries = getPendingPartialEntries(liveTranscriptState)
+
+        for (const entry of pendingEntries) {
+          await api.session.appendTranscript({ sessionId: activeSessionId, entry })
+        }
+
+        const { sessionId: finalizedSessionId } = await api.transcription.stop()
+
+        return { sessionId: finalizedSessionId, saveError: null }
       } catch (error) {
         return {
-          payload,
           sessionId: null,
           saveError: toErrorMessage(error, 'Failed to save session.')
         }

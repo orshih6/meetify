@@ -9,7 +9,8 @@ import {
   surfaceMuted
 } from '@renderer/lib/uiClasses'
 import { cn } from '@renderer/lib/utils'
-import { useHomeRecording, useLiveTranscriptDisplay } from '@renderer/stores/homeStore'
+import { useHomeRecording, useLiveTranscriptBySource } from '@renderer/stores/homeStore'
+import { SOURCE_LABELS } from '@shared/transcript'
 import { useEffect, useState } from 'react'
 
 function useRecordingElapsed(active: boolean, startedAt: number | null): number {
@@ -92,16 +93,33 @@ function RecordingControls() {
 }
 
 function LiveTranscriptPanel() {
-  const liveTranscriptText = useLiveTranscriptDisplay()
+  const { me, them, hasInterviewer } = useLiveTranscriptBySource()
 
-  if (!liveTranscriptText) {
+  if (!me && !them) {
     return null
   }
 
   return (
     <div className={cn('mt-4 rounded-xl border p-4', surfaceBorder, surfaceMuted)}>
       <p className="text-ash text-xs font-medium tracking-wide uppercase">Live transcript</p>
-      <p className="text-ink mt-2 text-sm leading-relaxed">{liveTranscriptText}</p>
+
+      {me ? (
+        <div className="mt-3">
+          <p className="text-ash text-xs font-medium tracking-wide uppercase">
+            {SOURCE_LABELS.me}
+          </p>
+          <p className="text-ink mt-1 text-sm leading-relaxed">{me}</p>
+        </div>
+      ) : null}
+
+      {hasInterviewer && them ? (
+        <div className="mt-3">
+          <p className="text-ash text-xs font-medium tracking-wide uppercase">
+            {SOURCE_LABELS.interviewer}
+          </p>
+          <p className="text-ink mt-1 text-sm leading-relaxed">{them}</p>
+        </div>
+      ) : null}
     </div>
   )
 }

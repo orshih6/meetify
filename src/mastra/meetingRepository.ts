@@ -2,10 +2,10 @@ import { randomUUID } from 'node:crypto'
 import type { MastraDBMessage } from '@mastra/core/agent'
 import type { MemoryStorage } from '@mastra/core/storage'
 import type {
-  SavedSessionTranscript,
   SavedTranscriptEntry,
   SessionListEntry,
   SessionLoadResult,
+  SessionStatus,
   SummaryStatus
 } from '@shared/ipc'
 import { MEETIFY_RESOURCE_ID } from './storage'
@@ -13,6 +13,7 @@ import { MEETIFY_RESOURCE_ID } from './storage'
 type MeetingThreadMetadata = {
   startedAt: string
   durationSeconds: number
+  sessionStatus?: SessionStatus
   summaryStatus?: SummaryStatus
   summary?: string
 }
@@ -28,6 +29,10 @@ function parseThreadMetadata(metadata: Record<string, unknown> | undefined): Mee
     typeof metadata?.startedAt === 'string' ? metadata.startedAt : new Date().toISOString()
   const durationSeconds =
     typeof metadata?.durationSeconds === 'number' ? metadata.durationSeconds : 0
+  const sessionStatus =
+    metadata?.sessionStatus === 'recording' || metadata?.sessionStatus === 'completed'
+      ? metadata.sessionStatus
+      : undefined
   const summaryStatus =
     metadata?.summaryStatus === 'processing' ||
     metadata?.summaryStatus === 'ready' ||
@@ -36,78 +41,151 @@ function parseThreadMetadata(metadata: Record<string, unknown> | undefined): Mee
       : undefined
   const summary = typeof metadata?.summary === 'string' ? metadata.summary : undefined
 
-  return { startedAt, durationSeconds, summaryStatus, summary }
+  return { startedAt, durationSeconds, sessionStatus, summaryStatus, summary }
 }
 
 function transcriptEntryToMessage(
   entry: SavedTranscriptEntry,
-  threadId: string,
-  startedAt: string
+  threadId: string
 ): MastraDBMessage {
-  const startedAtMs = new Date(startedAt).getTime()
-
   return {
     id: randomUUID(),
     role: 'user',
     threadId,
     resourceId: MEETIFY_RESOURCE_ID,
-    createdAt: new Date(startedAtMs + entry.elapsedSeconds * 1000),
+    createdAt: new Date(entry.itemStartedAtMs),
     content: {
       format: 2,
       parts: [{ type: 'text', text: entry.text }],
       metadata: {
         speaker: entry.speaker,
-        time: entry.time,
-        elapsedSeconds: entry.elapsedSeconds
+        itemId: entry.itemId,
+        itemStartedAtMs: entry.itemStartedAtMs
       }
     }
   }
 }
 
-function messageToTranscriptEntry(message: MastraDBMessage): SavedTranscriptEntry {
+function messageToTranscriptEntry(
+  message: MastraDBMessage,
+  recordingStartedAt: string
+): SavedTranscriptEntry {
   const metadata = message.content.metadata ?? {}
   const speaker = typeof metadata.speaker === 'string' ? metadata.speaker : 'Unknown'
-  const time = typeof metadata.time === 'string' ? metadata.time : ''
-  const elapsedSeconds = typeof metadata.elapsedSeconds === 'number' ? metadata.elapsedSeconds : 0
   const textPart = message.content.parts.find((part) => part.type === 'text')
   const text = textPart && 'text' in textPart ? textPart.text : ''
 
-  return { speaker, time, text, elapsedSeconds }
+  const itemId = typeof metadata.itemId === 'string' ? metadata.itemId : message.id
+
+  if (typeof metadata.itemStartedAtMs === 'number') {
+    return { speaker, text, itemId, itemStartedAtMs: metadata.itemStartedAtMs }
+  }
+
+  if (typeof metadata.elapsedSeconds === 'number') {
+    const recordingStartedAtMs = new Date(recordingStartedAt).getTime()
+    return {
+      speaker,
+      text,
+      itemId,
+      itemStartedAtMs: recordingStartedAtMs + metadata.elapsedSeconds * 1000
+    }
+  }
+
+  return {
+    speaker,
+    text,
+    itemId,
+    itemStartedAtMs: message.createdAt.getTime()
+  }
 }
 
-export async function saveMeetingSession(
+export async function createRecordingSession(
   memory: MemoryStorage,
-  payload: SavedSessionTranscript
+  startedAt: string
 ): Promise<string> {
   const sessionId = randomUUID()
   const now = new Date()
-  const title = formatSessionTitle()
   const metadata: MeetingThreadMetadata = {
-    startedAt: payload.startedAt,
-    durationSeconds: payload.durationSeconds,
-    summaryStatus: 'processing'
+    startedAt,
+    durationSeconds: 0,
+    sessionStatus: 'recording'
   }
 
   await memory.saveThread({
     thread: {
       id: sessionId,
       resourceId: MEETIFY_RESOURCE_ID,
-      title,
+      title: formatSessionTitle(),
       createdAt: now,
       updatedAt: now,
       metadata
     }
   })
 
-  if (payload.transcript.length > 0) {
-    const messages = payload.transcript.map((entry) =>
-      transcriptEntryToMessage(entry, sessionId, payload.startedAt)
-    )
+  return sessionId
+}
 
-    await memory.saveMessages({ messages })
+export async function appendTranscriptEntry(
+  memory: MemoryStorage,
+  sessionId: string,
+  entry: SavedTranscriptEntry,
+  _startedAt: string
+): Promise<void> {
+  const trimmed = entry.text.trim()
+
+  if (!trimmed) {
+    return
   }
 
-  return sessionId
+  const message = transcriptEntryToMessage({ ...entry, text: trimmed }, sessionId)
+  await memory.saveMessages({ messages: [message] })
+}
+
+export async function countTranscriptEntries(
+  memory: MemoryStorage,
+  sessionId: string
+): Promise<number> {
+  const { messages } = await memory.listMessages({
+    threadId: sessionId,
+    resourceId: MEETIFY_RESOURCE_ID,
+    perPage: false
+  })
+
+  return messages.length
+}
+
+export async function finalizeRecordingSession(
+  memory: MemoryStorage,
+  sessionId: string,
+  stoppedAt: number
+): Promise<{ durationSeconds: number; entryCount: number }> {
+  const thread = await memory.getThreadById({
+    threadId: sessionId,
+    resourceId: MEETIFY_RESOURCE_ID
+  })
+
+  if (!thread) {
+    throw new Error(`Meeting session not found: ${sessionId}`)
+  }
+
+  const meta = parseThreadMetadata(thread.metadata)
+  const startedAtMs = new Date(meta.startedAt).getTime()
+  const durationSeconds = Math.max(0, Math.floor((stoppedAt - startedAtMs) / 1000))
+
+  await memory.updateThread({
+    id: sessionId,
+    title: thread.title ?? formatSessionTitle(),
+    metadata: {
+      ...meta,
+      durationSeconds,
+      sessionStatus: 'completed',
+      summaryStatus: 'processing'
+    }
+  })
+
+  const entryCount = await countTranscriptEntries(memory, sessionId)
+
+  return { durationSeconds, entryCount }
 }
 
 export async function listMeetingSessions(memory: MemoryStorage): Promise<SessionListEntry[]> {
@@ -117,17 +195,19 @@ export async function listMeetingSessions(memory: MemoryStorage): Promise<Sessio
     orderBy: { field: 'createdAt', direction: 'DESC' }
   })
 
-  return threads.map((thread) => {
-    const meta = parseThreadMetadata(thread.metadata)
+  return threads
+    .filter((thread) => parseThreadMetadata(thread.metadata).sessionStatus !== 'recording')
+    .map((thread) => {
+      const meta = parseThreadMetadata(thread.metadata)
 
-    return {
-      sessionId: thread.id,
-      title: thread.title ?? formatSessionTitle(),
-      startedAt: meta.startedAt,
-      durationSeconds: meta.durationSeconds,
-      summaryStatus: meta.summaryStatus ?? (meta.summary ? 'ready' : 'processing')
-    }
-  })
+      return {
+        sessionId: thread.id,
+        title: thread.title ?? formatSessionTitle(),
+        startedAt: meta.startedAt,
+        durationSeconds: meta.durationSeconds,
+        summaryStatus: meta.summaryStatus ?? (meta.summary ? 'ready' : 'processing')
+      }
+    })
 }
 
 export async function loadMeetingSession(
@@ -152,8 +232,8 @@ export async function loadMeetingSession(
   })
 
   const transcript = messages
-    .map(messageToTranscriptEntry)
-    .toSorted((a, b) => a.elapsedSeconds - b.elapsedSeconds)
+    .map((message) => messageToTranscriptEntry(message, meta.startedAt))
+    .toSorted((a, b) => a.itemStartedAtMs - b.itemStartedAtMs)
 
   return {
     sessionId: thread.id,
@@ -260,7 +340,7 @@ export async function deleteMeetingSession(
   })
 
   if (!thread) {
-    throw new Error(`Meeting session not found: ${sessionId}`)
+    return
   }
 
   const { messages } = await memory.listMessages({
@@ -274,4 +354,19 @@ export async function deleteMeetingSession(
   }
 
   await memory.deleteThread({ threadId: sessionId })
+}
+
+export async function deleteOrphanRecordingSessions(memory: MemoryStorage): Promise<void> {
+  const { threads } = await memory.listThreads({
+    filter: { resourceId: MEETIFY_RESOURCE_ID },
+    perPage: false
+  })
+
+  for (const thread of threads) {
+    const meta = parseThreadMetadata(thread.metadata)
+
+    if (meta.sessionStatus === 'recording') {
+      await deleteMeetingSession(memory, thread.id)
+    }
+  }
 }
