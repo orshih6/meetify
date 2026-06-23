@@ -9,14 +9,11 @@ import {
 import { getElectronMemoryStore } from './mastraStorage'
 
 export function registerSessionHandlers(): void {
-  ipcMain.handle(
-    IPC_CHANNELS.session.save,
-    async (_event, payload: SavedSessionTranscript) => {
-      const memory = getElectronMemoryStore()
-      const sessionId = await saveMeetingSession(memory, payload)
-      return { sessionId }
-    }
-  )
+  ipcMain.handle(IPC_CHANNELS.session.save, async (_event, payload: SavedSessionTranscript) => {
+    const memory = getElectronMemoryStore()
+    const sessionId = await saveMeetingSession(memory, payload)
+    return { sessionId }
+  })
 
   ipcMain.handle(IPC_CHANNELS.session.list, async () => {
     const memory = getElectronMemoryStore()

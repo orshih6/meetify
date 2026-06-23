@@ -29,10 +29,7 @@ export function formatDetailDate(date: Date): string {
 }
 
 export function formatSessionListTitle(session: MeetingSession): string {
-  if (
-    session.title === UNTITLED_SESSION_TITLE ||
-    AUTO_RECORDING_TITLE_PREFIX.test(session.title)
-  ) {
+  if (session.title === UNTITLED_SESSION_TITLE || AUTO_RECORDING_TITLE_PREFIX.test(session.title)) {
     return formatSessionTime(session.startedAt)
   }
 

@@ -23,7 +23,7 @@ export function KeybindsPanel() {
             )}
           >
             <span className="text-ash text-sm">{keybind.action}</span>
-            <span className="text-ash rounded-md border border-neutral-700 bg-graphite px-1.5 py-0.5 font-mono text-xs">
+            <span className="text-ash bg-graphite rounded-md border border-neutral-700 px-1.5 py-0.5 font-mono text-xs">
               {keybind.keys}
             </span>
           </div>

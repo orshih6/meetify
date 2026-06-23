@@ -51,7 +51,7 @@ export function SessionDetailTabs() {
             className={({ selected }) =>
               cn(
                 'rounded-full px-3 py-1 text-xs outline-none',
-                selected ? 'bg-neutral-800 text-ink' : 'text-ash hover:text-neutral-200'
+                selected ? 'text-ink bg-neutral-800' : 'text-ash hover:text-neutral-200'
               )
             }
           >
@@ -65,8 +65,8 @@ export function SessionDetailTabs() {
         disabled={!copyContent}
         className={cn(
           'text-ash flex shrink-0 items-center gap-1.5 text-xs',
-          'transition-colors hover:text-ink',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-signal/60',
+          'hover:text-ink transition-colors',
+          'focus-visible:ring-signal/60 focus:outline-none focus-visible:ring-2',
           'disabled:cursor-not-allowed disabled:opacity-40'
         )}
       >

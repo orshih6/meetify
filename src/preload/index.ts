@@ -125,8 +125,7 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.settings.set, partial)
   },
   credentials: {
-    getStatus: (): Promise<ApiKeyStatus> =>
-      ipcRenderer.invoke(IPC_CHANNELS.credentials.getStatus),
+    getStatus: (): Promise<ApiKeyStatus> => ipcRenderer.invoke(IPC_CHANNELS.credentials.getStatus),
     setOpenAiApiKey: (apiKey: string): Promise<ApiKeyStatus> =>
       ipcRenderer.invoke(IPC_CHANNELS.credentials.setOpenAiApiKey, apiKey),
     clearOpenAiApiKey: (): Promise<ApiKeyStatus> =>

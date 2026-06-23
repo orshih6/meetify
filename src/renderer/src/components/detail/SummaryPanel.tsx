@@ -45,7 +45,7 @@ export function SummaryPanel() {
               'mt-4 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5',
               'bg-graphite text-ink text-xs font-medium',
               'border border-neutral-700 transition-colors hover:border-neutral-600',
-              'focus:outline-none focus-visible:ring-2 focus-visible:ring-signal/60',
+              'focus-visible:ring-signal/60 focus:outline-none focus-visible:ring-2',
               'disabled:cursor-not-allowed disabled:opacity-60'
             )}
           >
@@ -67,7 +67,7 @@ export function SummaryPanel() {
           className={cn(
             'inline-flex items-center gap-1.5 text-xs text-neutral-500',
             'transition-colors hover:text-neutral-300',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-signal/60',
+            'focus-visible:ring-signal/60 focus:outline-none focus-visible:ring-2',
             'disabled:cursor-not-allowed disabled:opacity-60'
           )}
         >

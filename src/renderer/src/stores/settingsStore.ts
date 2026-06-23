@@ -41,10 +41,7 @@ type SettingsState = {
 
 export const LANGUAGE_SETTING_OPTIONS = LANGUAGE_OPTIONS
 
-export function getInputDeviceLabel(
-  devices: AudioInputDevice[],
-  deviceId: string | null
-): string {
+export function getInputDeviceLabel(devices: AudioInputDevice[], deviceId: string | null): string {
   if (!deviceId) {
     return DEFAULT_DEVICE_LABEL
   }

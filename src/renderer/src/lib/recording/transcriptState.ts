@@ -133,4 +133,3 @@ export function buildSavedSessionTranscript(
     transcript: getStoredTranscriptEntries(state)
   }
 }
-

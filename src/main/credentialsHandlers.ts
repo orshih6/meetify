@@ -1,10 +1,6 @@
 import { ipcMain } from 'electron'
 import { IPC_CHANNELS } from '@shared/ipc'
-import {
-  clearOpenAiApiKey,
-  getOpenAiApiKeyStatus,
-  setOpenAiApiKey
-} from './credentials'
+import { clearOpenAiApiKey, getOpenAiApiKeyStatus, setOpenAiApiKey } from './credentials'
 
 export function registerCredentialsHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.credentials.getStatus, () => {

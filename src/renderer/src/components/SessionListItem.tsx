@@ -62,7 +62,7 @@ export function SessionListItem({ session }: SessionListItemProps) {
           className={cn(
             iconButtonClass,
             'shrink-0 text-neutral-500 opacity-0 transition-opacity',
-            'hover:text-red-400 group-hover:opacity-100 focus-visible:opacity-100'
+            'group-hover:opacity-100 hover:text-red-400 focus-visible:opacity-100'
           )}
         >
           <TrashIcon className="h-3.5 w-3.5" />

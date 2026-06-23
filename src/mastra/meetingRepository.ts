@@ -24,7 +24,8 @@ function formatSessionTitle(): string {
 }
 
 function parseThreadMetadata(metadata: Record<string, unknown> | undefined): MeetingThreadMetadata {
-  const startedAt = typeof metadata?.startedAt === 'string' ? metadata.startedAt : new Date().toISOString()
+  const startedAt =
+    typeof metadata?.startedAt === 'string' ? metadata.startedAt : new Date().toISOString()
   const durationSeconds =
     typeof metadata?.durationSeconds === 'number' ? metadata.durationSeconds : 0
   const summaryStatus =
@@ -67,8 +68,7 @@ function messageToTranscriptEntry(message: MastraDBMessage): SavedTranscriptEntr
   const metadata = message.content.metadata ?? {}
   const speaker = typeof metadata.speaker === 'string' ? metadata.speaker : 'Unknown'
   const time = typeof metadata.time === 'string' ? metadata.time : ''
-  const elapsedSeconds =
-    typeof metadata.elapsedSeconds === 'number' ? metadata.elapsedSeconds : 0
+  const elapsedSeconds = typeof metadata.elapsedSeconds === 'number' ? metadata.elapsedSeconds : 0
   const textPart = message.content.parts.find((part) => part.type === 'text')
   const text = textPart && 'text' in textPart ? textPart.text : ''
 
@@ -134,7 +134,10 @@ export async function loadMeetingSession(
   memory: MemoryStorage,
   sessionId: string
 ): Promise<SessionLoadResult | null> {
-  const thread = await memory.getThreadById({ threadId: sessionId, resourceId: MEETIFY_RESOURCE_ID })
+  const thread = await memory.getThreadById({
+    threadId: sessionId,
+    resourceId: MEETIFY_RESOURCE_ID
+  })
 
   if (!thread) {
     return null
@@ -168,7 +171,10 @@ async function updateThreadMetadata(
   sessionId: string,
   patch: Partial<MeetingThreadMetadata>
 ): Promise<void> {
-  const thread = await memory.getThreadById({ threadId: sessionId, resourceId: MEETIFY_RESOURCE_ID })
+  const thread = await memory.getThreadById({
+    threadId: sessionId,
+    resourceId: MEETIFY_RESOURCE_ID
+  })
 
   if (!thread) {
     throw new Error(`Meeting session not found: ${sessionId}`)
@@ -220,7 +226,10 @@ export async function saveMeetingTitle(
   sessionId: string,
   title: string
 ): Promise<void> {
-  const thread = await memory.getThreadById({ threadId: sessionId, resourceId: MEETIFY_RESOURCE_ID })
+  const thread = await memory.getThreadById({
+    threadId: sessionId,
+    resourceId: MEETIFY_RESOURCE_ID
+  })
 
   if (!thread) {
     throw new Error(`Meeting session not found: ${sessionId}`)

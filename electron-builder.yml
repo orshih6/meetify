@@ -1,5 +1,5 @@
-appId: com.electron.app
-productName: meetify
+appId: com.personalapp.meetify
+productName: Meetify
 directories:
   buildResources: build
 files:
