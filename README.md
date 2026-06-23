@@ -15,12 +15,26 @@ Desktop app to record meetings, transcribe in real time, and generate AI summari
 
 ## How to use
 
-1. **Get the app** — install a build (see [Development](#development)) or run from source.
+1. **Get the app** — install from [GitHub Releases](https://github.com/orshih6/meetify/releases) (see [macOS install notes](#installing-from-github-releases-macos)) or run from source.
 2. **Add your API key** — Settings → AI Providers, or set `OPENAI_API_KEY` in `.env` for local dev.
 3. **Allow microphone access** — on macOS, the built app may also need System Audio Recording for meeting audio capture.
 4. **Record** — click Start recording, then Stop when the meeting ends.
 5. **Review** — open the session from the list; read the Summary and Transcript tabs.
 6. **Adjust** — change language or input device under Settings → Audio.
+
+## Installing from GitHub Releases (macOS)
+
+Mac builds are **not yet code-signed or notarized**. When you download the DMG from GitHub, macOS may block the app and show **“Meetify is damaged and can’t be opened.”** The app isn’t broken — Gatekeeper is rejecting an unsigned download.
+
+**Workaround after installing to Applications:**
+
+```bash
+xattr -cr /Applications/Meetify.app
+```
+
+Then open Meetify normally. Alternatively, right-click the app → **Open** the first time.
+
+**Coming later:** We have an Apple Developer account and plan to sign and notarize Mac releases so this step won’t be needed.
 
 ## Tech stack
 
