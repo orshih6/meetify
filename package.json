@@ -23,7 +23,9 @@
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "electron-vite build && electron-builder --mac",
     "build:mac:ci": "electron-vite build && electron-builder --mac --x64 --arm64",
-    "build:linux": "electron-vite build && electron-builder --linux"
+    "build:linux": "electron-vite build && electron-builder --linux",
+    "release:check": "node scripts/verify-release-version.mjs",
+    "release:tag": "node -e \"const v=require('./package.json').version; console.log('Run: git tag v'+v+' && git push origin v'+v)\""
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
