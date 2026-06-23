@@ -5,7 +5,7 @@
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
   "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "homepage": "https://orshih6.github.io/meetify/",
   "scripts": {
     "format": "prettier --write .",
     "generate:icons": "node scripts/generate-app-icons.mjs",

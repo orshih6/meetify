@@ -15,7 +15,7 @@ Desktop app to record meetings, transcribe in real time, and generate AI summari
 
 ## How to use
 
-1. **Get the app** — install from [GitHub Releases](https://github.com/orshih6/meetify/releases) (see [macOS install notes](#installing-from-github-releases-macos)) or run from source.
+1. **Get the app** — see the [product page](https://orshih6.github.io/meetify/) or install from [GitHub Releases](https://github.com/orshih6/meetify/releases) (see [macOS install notes](#installing-from-github-releases-macos)) or run from source.
 2. **Add your API key** — Settings → AI Providers, or set `OPENAI_API_KEY` in `.env` for local dev.
 3. **Allow microphone access** — on macOS, the built app may also need System Audio Recording for meeting audio capture.
 4. **Record** — click Start recording, then Stop when the meeting ends.
