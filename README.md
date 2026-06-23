@@ -1,37 +1,73 @@
-# meetify
+# Meetify
 
-An Electron application with React and TypeScript
+Desktop app to record meetings, transcribe in real time, and generate AI summaries. Local-first — your sessions stay on your machine.
 
-## Recommended IDE Setup
+## Features
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
+- Record microphone (+ system audio when permitted)
+- Live transcript while recording
+- Auto-generated meeting title and markdown summary
+- Session history grouped by date
+- Copy summary or full transcript
+- Retry or regenerate summary if something fails
+- Settings for language, microphone, and OpenAI API key
+- Keyboard shortcuts: `Cmd+,` settings · `Cmd+R` start · `Cmd+Shift+R` stop
 
-## Project Setup
+## How to use
 
-### Install
+1. **Get the app** — install a build (see [Development](#development)) or run from source.
+2. **Add your API key** — Settings → AI Providers, or set `OPENAI_API_KEY` in `.env` for local dev.
+3. **Allow microphone access** — on macOS, the built app may also need System Audio Recording for meeting audio capture.
+4. **Record** — click Start recording, then Stop when the meeting ends.
+5. **Review** — open the session from the list; read the Summary and Transcript tabs.
+6. **Adjust** — change language or input device under Settings → Audio.
 
-```bash
-$ npm install
+## Tech stack
+
+- **Electron + electron-vite + electron-builder** — cross-platform desktop app
+- **React 19 + TypeScript + Tailwind 4** — UI
+- **Zustand + Headless UI** — state and accessible components
+- **OpenAI Realtime API** — live speech-to-text
+- **OpenAI GPT (gpt-5-mini) + Mastra** — title and summary agents
+- **LibSQL (Mastra)** — local session storage (`meetify.db` in app data)
+
+## Project layout
+
+```
+src/main/      — Electron main process, IPC, transcription
+src/renderer/  — React UI
+src/preload/   — window.api bridge
+src/shared/    — IPC channels and types
+src/mastra/    — agents and storage
 ```
 
-### Development
+## Development
+
+**Prerequisites:** Node.js 22.x, pnpm, OpenAI API key
 
 ```bash
-$ npm run dev
+nvm use
+pnpm install
+cp .env.example .env   # add OPENAI_API_KEY
+pnpm dev
 ```
 
-### Build
+**Scripts**
 
-```bash
-# For windows
-$ npm run build:win
+- `pnpm dev` — run app with hot reload
+- `pnpm build` — typecheck and production build
+- `pnpm build:mac` / `build:win` / `build:linux` — platform installers
+- `pnpm lint` — ESLint
+- `pnpm typecheck` — TypeScript
 
-# For macOS
-$ npm run build:mac
+## Agents
 
-# For Linux
-$ npm run build:linux
-```
+Two Mastra agents in `src/mastra/agents/`:
+
+- **meeting-title-agent** — short descriptive title from the transcript
+- **meeting-summary-agent** — markdown summary (overview + key takeaways)
+
+To improve them: edit `instructions` in the agent files, change the model, or register new agents in `src/mastra/index.ts` (see `AGENTS.md`). Possible next steps: Q&A over a session, workflows for long meetings, alternate speech-to-text providers.
 
 ## Troubleshooting
 
