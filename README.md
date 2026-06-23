@@ -1,6 +1,15 @@
-# Meetify
+<p align="center">
+  <a href="https://orshih6.github.io/meetify/">
+    <img src="resources/icon.png" alt="Meetify" width="96" height="96" />
+  </a>
+</p>
 
-Desktop app to record meetings, transcribe in real time, and generate AI summaries. Local-first — your sessions stay on your machine.
+<h1 align="center">Meetify</h1>
+
+<p align="center">
+  Desktop app to record meetings, transcribe in real time, and generate AI summaries.<br />
+  Local-first — your sessions stay on your machine.
+</p>
 
 ## Features
 
