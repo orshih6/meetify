@@ -69,6 +69,18 @@ function onTranscriptionClosed(
   }
 }
 
+function onShortcut(channel: string, callback: () => void): () => void {
+  const handler = (): void => {
+    callback()
+  }
+
+  ipcRenderer.on(channel, handler)
+
+  return () => {
+    ipcRenderer.removeListener(channel, handler)
+  }
+}
+
 const api = {
   platform: process.platform,
   recording: {
@@ -119,6 +131,17 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.credentials.setOpenAiApiKey, apiKey),
     clearOpenAiApiKey: (): Promise<ApiKeyStatus> =>
       ipcRenderer.invoke(IPC_CHANNELS.credentials.clearOpenAiApiKey)
+  },
+  app: {
+    getVersion: (): Promise<string> => ipcRenderer.invoke(IPC_CHANNELS.app.getVersion)
+  },
+  shortcut: {
+    onOpenSettings: (callback: () => void): (() => void) =>
+      onShortcut(IPC_CHANNELS.shortcut.openSettings, callback),
+    onStartRecording: (callback: () => void): (() => void) =>
+      onShortcut(IPC_CHANNELS.shortcut.startRecording, callback),
+    onStopRecording: (callback: () => void): (() => void) =>
+      onShortcut(IPC_CHANNELS.shortcut.stopRecording, callback)
   }
 }
 

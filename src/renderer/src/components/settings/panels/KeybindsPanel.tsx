@@ -4,8 +4,7 @@ import { cn } from '@renderer/lib/utils'
 const KEYBINDS = [
   { action: 'Open settings', keys: 'Cmd + ,' },
   { action: 'Start recording', keys: 'Cmd + R' },
-  { action: 'Stop recording', keys: 'Cmd + Shift + R' },
-  { action: 'Ask about meeting', keys: 'Cmd + K' }
+  { action: 'Stop recording', keys: 'Cmd + Shift + R' }
 ]
 
 export function KeybindsPanel() {
@@ -23,8 +22,8 @@ export function KeybindsPanel() {
               index !== KEYBINDS.length - 1 && 'border-b border-neutral-900/80'
             )}
           >
-            <span className="text-sm text-neutral-400">{keybind.action}</span>
-            <span className="rounded-md border border-neutral-700 bg-neutral-900 px-1.5 py-0.5 font-mono text-xs text-neutral-500">
+            <span className="text-ash text-sm">{keybind.action}</span>
+            <span className="text-ash rounded-md border border-neutral-700 bg-graphite px-1.5 py-0.5 font-mono text-xs">
               {keybind.keys}
             </span>
           </div>

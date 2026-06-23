@@ -8,6 +8,8 @@ import type { MeetingSession } from '@renderer/types/meeting'
 import type { SavedSessionTranscript } from '@shared/ipc'
 import { create } from 'zustand'
 
+const UNTITLED_SESSION_TITLE = 'Untitled'
+
 type SessionCatalogState = {
   sessions: MeetingSession[]
   isLoading: boolean
@@ -30,6 +32,20 @@ function mergeSession(existing: MeetingSession | undefined, next: MeetingSession
   }
 }
 
+function resumeIncompleteSessions(sessions: MeetingSession[]): void {
+  const store = useSessionCatalogStore.getState()
+
+  for (const session of sessions) {
+    if (session.summaryStatus === 'processing') {
+      void store.requestSummary(session.id)
+    }
+
+    if (session.title === UNTITLED_SESSION_TITLE) {
+      void store.requestTitle(session.id)
+    }
+  }
+}
+
 export const useSessionCatalogStore = create<SessionCatalogState>((set) => ({
   sessions: [],
   isLoading: false,
@@ -43,6 +59,7 @@ export const useSessionCatalogStore = create<SessionCatalogState>((set) => ({
       const sessions = entries.map(meetingSessionFromListEntry)
 
       set({ sessions, isLoading: false })
+      resumeIncompleteSessions(sessions)
     } catch (error) {
       set({
         isLoading: false,
@@ -76,6 +93,12 @@ export const useSessionCatalogStore = create<SessionCatalogState>((set) => ({
   },
 
   requestSummary: async (sessionId) => {
+    set((state) => ({
+      sessions: state.sessions.map((session) =>
+        session.id === sessionId ? { ...session, summaryStatus: 'processing' } : session
+      )
+    }))
+
     try {
       const { summary } = await window.api.summary.generate(sessionId)
 

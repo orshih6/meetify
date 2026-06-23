@@ -77,9 +77,11 @@ export type ApiKeyStatus = {
 export type AppSettings = {
   speechProvider: 'openai-realtime'
   language: string
+  inputDeviceId: string | null
 }
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   speechProvider: 'openai-realtime',
-  language: 'en'
+  language: 'en',
+  inputDeviceId: null
 }

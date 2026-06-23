@@ -53,6 +53,14 @@ declare global {
         setOpenAiApiKey: (apiKey: string) => Promise<ApiKeyStatus>
         clearOpenAiApiKey: () => Promise<ApiKeyStatus>
       }
+      app: {
+        getVersion: () => Promise<string>
+      }
+      shortcut: {
+        onOpenSettings: (callback: () => void) => () => void
+        onStartRecording: (callback: () => void) => () => void
+        onStopRecording: (callback: () => void) => () => void
+      }
     }
   }
 }

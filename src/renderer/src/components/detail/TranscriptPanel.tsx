@@ -1,5 +1,7 @@
 import { TranscriptEntry } from '@renderer/components/detail/TranscriptEntry'
+import { EmptyState } from '@renderer/components/ui/EmptyState'
 import { useSelectedSession } from '@renderer/stores/sessionNavigationStore'
+import { ChatBubbleBottomCenterTextIcon } from '@heroicons/react/16/solid'
 
 export function TranscriptPanel() {
   const session = useSelectedSession()
@@ -7,7 +9,12 @@ export function TranscriptPanel() {
   if (!session?.transcript?.length) {
     return (
       <section className="mt-6">
-        <p className="text-xs text-neutral-600">Transcript will appear here</p>
+        <EmptyState
+          icon={ChatBubbleBottomCenterTextIcon}
+          title="No transcript yet"
+          description="The full transcript will appear here after you record a meeting."
+          className="py-8"
+        />
       </section>
     )
   }

@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { registerAppHandlers } from './appHandlers'
 import { registerDisplayMediaHandler } from './displayCapture'
 import { registerMicPermissionHandlers } from './micPermission'
 import { initMastraStorage } from './mastraStorage'
@@ -11,7 +12,10 @@ import { registerSummaryHandlers } from './summaryHandlers'
 import { registerTitleHandlers } from './titleHandlers'
 import { registerCredentialsHandlers } from './credentialsHandlers'
 import { registerSettingsHandlers } from './settingsPersistence'
+import { registerGlobalShortcuts, unregisterGlobalShortcuts } from './shortcuts'
 import { registerTranscriptionHandlers } from './transcription'
+
+let mainWindow: BrowserWindow | null = null
 
 function loadEnvFile(): void {
   const envPaths = [join(process.cwd(), '.env'), join(__dirname, '../../.env')]
@@ -52,7 +56,7 @@ loadEnvFile()
 
 function createWindow(): void {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  const window = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
@@ -70,11 +74,13 @@ function createWindow(): void {
     }
   })
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+  mainWindow = window
+
+  window.on('ready-to-show', () => {
+    window.show()
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
+  window.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
   })
@@ -82,9 +88,9 @@ function createWindow(): void {
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    window.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    window.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
 
@@ -111,8 +117,14 @@ app.whenReady().then(async () => {
   registerSettingsHandlers()
   registerCredentialsHandlers()
   registerTranscriptionHandlers()
+  registerAppHandlers()
 
   createWindow()
+  registerGlobalShortcuts(() => mainWindow)
+
+  app.on('will-quit', () => {
+    unregisterGlobalShortcuts()
+  })
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

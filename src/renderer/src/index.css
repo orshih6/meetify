@@ -1,8 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,500&family=Source+Sans+3:wght@400;500;600&display=swap');
 @import 'tailwindcss';
+
+@theme {
+  --color-void: #050505;
+  --color-ink: #e8e6e3;
+  --color-graphite: #1a1a1c;
+  --color-ash: #6b6b70;
+  --color-signal: #4fd1c5;
+  --font-sans: 'Source Sans 3', system-ui, sans-serif;
+  --font-display: 'Newsreader', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
 
 body {
   margin: 0;
-  background-color: #000;
+  background-color: var(--color-void);
+  font-family: var(--font-sans);
+  color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -13,4 +27,14 @@ body {
 
 .app-header-no-drag {
   -webkit-app-region: no-drag;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

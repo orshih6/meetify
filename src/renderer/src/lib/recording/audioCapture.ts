@@ -18,8 +18,9 @@ let audioContext: AudioContext | null = null
 let processors: ScriptProcessorNode[] = []
 let silentGain: GainNode | null = null
 
-async function captureMic(): Promise<MediaStream> {
-  return navigator.mediaDevices.getUserMedia({ audio: true })
+async function captureMic(deviceId: string | null): Promise<MediaStream> {
+  const audio = deviceId ? { deviceId: { exact: deviceId } } : true
+  return navigator.mediaDevices.getUserMedia({ audio })
 }
 
 function hasLiveAudio(stream: MediaStream): boolean {
@@ -140,8 +141,9 @@ export function createAudioCapture(api: RecordingApi) {
         throw new Error('Microphone permission was denied.')
       }
 
+      const settings = await api.settings.get()
       const [mic, { stream: system, warning }] = await Promise.all([
-        captureMic(),
+        captureMic(settings.inputDeviceId),
         captureSystemAudio()
       ])
       const sources: TranscriptSource[] = ['me', ...(system ? ['interviewer' as const] : [])]

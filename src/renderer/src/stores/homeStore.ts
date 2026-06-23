@@ -14,7 +14,6 @@ function toErrorMessage(error: unknown, fallback: string): string {
 const recordingPipeline: RecordingPipeline = createRecordingPipeline()
 
 type HomeState = {
-  isDetectable: boolean
   isRecording: boolean
   isStarting: boolean
   isStopping: boolean
@@ -22,7 +21,6 @@ type HomeState = {
   recordingWarning: string | null
   recordingStartedAt: number | null
   liveTranscriptVersion: number
-  toggleDetectable: () => void
   startRecording: () => Promise<void>
   stopRecording: () => Promise<void>
   getLiveTranscriptText: () => string
@@ -31,7 +29,6 @@ type HomeState = {
 let pipelineUnsubscribe: (() => void) | null = null
 
 export const useHomeStore = create<HomeState>((set, get) => ({
-  isDetectable: false,
   isRecording: false,
   isStarting: false,
   isStopping: false,
@@ -41,8 +38,6 @@ export const useHomeStore = create<HomeState>((set, get) => ({
   liveTranscriptVersion: 0,
 
   getLiveTranscriptText: () => getLiveDisplayText(recordingPipeline.getTranscriptState()),
-
-  toggleDetectable: () => set((state) => ({ isDetectable: !state.isDetectable })),
 
   startRecording: async () => {
     const { isRecording, isStarting } = get()
@@ -141,14 +136,12 @@ export const useHomeStore = create<HomeState>((set, get) => ({
 export function useHomeRecording() {
   return useHomeStore(
     useShallow((state) => ({
-      isDetectable: state.isDetectable,
       isRecording: state.isRecording,
       isStarting: state.isStarting,
       isStopping: state.isStopping,
       recordingError: state.recordingError,
       recordingWarning: state.recordingWarning,
       recordingStartedAt: state.recordingStartedAt,
-      toggleDetectable: state.toggleDetectable,
       startRecording: state.startRecording,
       stopRecording: state.stopRecording
     }))

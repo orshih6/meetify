@@ -31,5 +31,13 @@ export const IPC_CHANNELS = {
     getStatus: 'credentials:get-status',
     setOpenAiApiKey: 'credentials:set-openai-api-key',
     clearOpenAiApiKey: 'credentials:clear-openai-api-key'
+  },
+  app: {
+    getVersion: 'app:get-version'
+  },
+  shortcut: {
+    openSettings: 'shortcut:open-settings',
+    startRecording: 'shortcut:start-recording',
+    stopRecording: 'shortcut:stop-recording'
   }
 } as const

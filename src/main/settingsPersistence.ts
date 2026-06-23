@@ -20,7 +20,8 @@ async function loadSettings(): Promise<AppSettings> {
     cachedSettings = {
       ...DEFAULT_APP_SETTINGS,
       ...parsed,
-      speechProvider: 'openai-realtime'
+      speechProvider: 'openai-realtime',
+      inputDeviceId: parsed.inputDeviceId ?? null
     }
     return cachedSettings
   } catch {

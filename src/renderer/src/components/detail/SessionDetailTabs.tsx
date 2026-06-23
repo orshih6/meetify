@@ -4,6 +4,7 @@ import { DEFAULT_SUMMARY_MARKDOWN } from '@shared/summary/defaultSummary'
 import { cn } from '@renderer/lib/utils'
 import { useDetailStore } from '@renderer/stores/detailStore'
 import { useSelectedSession } from '@renderer/stores/sessionNavigationStore'
+import { useToastStore } from '@renderer/stores/toastStore'
 import type { TranscriptEntry } from '@renderer/types/meeting'
 
 const TABS = ['Summary', 'Transcript'] as const
@@ -25,11 +26,21 @@ async function copyToClipboard(text: string): Promise<void> {
 export function SessionDetailTabs() {
   const session = useSelectedSession()
   const activeTab = useDetailStore((state) => state.activeTab)
+  const showToast = useToastStore((state) => state.showToast)
   const isTranscriptTab = activeTab === 'transcript'
   const copyLabel = isTranscriptTab ? 'Copy full transcript' : 'Copy full summary'
   const copyContent = isTranscriptTab
     ? formatTranscriptForCopy(session?.transcript)
     : (session?.summary ?? DEFAULT_SUMMARY_MARKDOWN)
+
+  const handleCopy = async (): Promise<void> => {
+    if (!copyContent) {
+      return
+    }
+
+    await copyToClipboard(copyContent)
+    showToast('Copied to clipboard')
+  }
 
   return (
     <div className="mt-6 flex items-center justify-between gap-4">
@@ -40,7 +51,7 @@ export function SessionDetailTabs() {
             className={({ selected }) =>
               cn(
                 'rounded-full px-3 py-1 text-xs outline-none',
-                selected ? 'bg-neutral-800 text-white' : 'text-neutral-400 hover:text-neutral-200'
+                selected ? 'bg-neutral-800 text-ink' : 'text-ash hover:text-neutral-200'
               )
             }
           >
@@ -50,11 +61,13 @@ export function SessionDetailTabs() {
       </TabList>
 
       <Button
-        onClick={() => void copyToClipboard(copyContent)}
+        onClick={() => void handleCopy()}
+        disabled={!copyContent}
         className={cn(
-          'flex shrink-0 items-center gap-1.5 text-xs text-neutral-500',
-          'transition-colors hover:text-white',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-600'
+          'text-ash flex shrink-0 items-center gap-1.5 text-xs',
+          'transition-colors hover:text-ink',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-signal/60',
+          'disabled:cursor-not-allowed disabled:opacity-40'
         )}
       >
         <DocumentDuplicateIcon className="h-4 w-4" />
