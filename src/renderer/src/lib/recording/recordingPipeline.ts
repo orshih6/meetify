@@ -1,11 +1,11 @@
 import { createAudioCapture } from '@renderer/lib/recording/audioCapture'
 import { createDefaultRecordingApi, type RecordingApi } from '@renderer/lib/recording/ipcAdapter'
+import { toErrorMessage } from '@renderer/lib/errors'
 import {
   appendDelta,
   createLiveTranscriptState,
   finalizeUtterance,
   getLiveDisplayTextBySource,
-  getPendingPartialEntries,
   type LiveTranscriptState
 } from '@renderer/lib/recording/transcriptState'
 import type { TranscriptSource } from '@shared/ipc'
@@ -31,7 +31,11 @@ export type RecordingEvent =
 type Unsubscribe = () => void
 
 export type RecordingPipeline = {
-  start: () => Promise<{ warning: string | null; sources: TranscriptSource[] }>
+  start: () => Promise<{
+    startedAtMs: number
+    warning: string | null
+    sources: TranscriptSource[]
+  }>
   stop: () => Promise<{
     sessionId: string | null
     saveError: string | null
@@ -39,10 +43,6 @@ export type RecordingPipeline = {
   subscribe: (listener: (event: RecordingEvent) => void) => Unsubscribe
   getDisplayTextBySource: (source: TranscriptSource) => string
   getTranscriptState: () => LiveTranscriptState
-}
-
-function toErrorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback
 }
 
 export function createRecordingPipeline(deps?: { api?: RecordingApi }): RecordingPipeline {
@@ -105,9 +105,13 @@ export function createRecordingPipeline(deps?: { api?: RecordingApi }): Recordin
       return liveTranscriptState
     },
 
-    async start(): Promise<{ warning: string | null; sources: TranscriptSource[] }> {
+    async start(): Promise<{
+      startedAtMs: number
+      warning: string | null
+      sources: TranscriptSource[]
+    }> {
       liveTranscriptState = createLiveTranscriptState()
-      recordingStartedAt = Date.now()
+      recordingStartedAt = null
       sessionId = null
 
       ipcUnsubscribes = [
@@ -138,12 +142,13 @@ export function createRecordingPipeline(deps?: { api?: RecordingApi }): Recordin
       const { warning, sources } = await capture.prepare()
       const startResult = await api.transcription.start(sources)
       sessionId = startResult.sessionId
+      recordingStartedAt = startResult.startedAtMs
 
       capture.beginProcessing((source, pcm) => {
         api.transcription.sendAudio(source, pcm)
       })
 
-      return { warning, sources }
+      return { startedAtMs: startResult.startedAtMs, warning, sources }
     },
 
     async stop(): Promise<{
@@ -167,12 +172,6 @@ export function createRecordingPipeline(deps?: { api?: RecordingApi }): Recordin
       }
 
       try {
-        const pendingEntries = getPendingPartialEntries(liveTranscriptState)
-
-        for (const entry of pendingEntries) {
-          await api.session.appendTranscript({ sessionId: activeSessionId, entry })
-        }
-
         const { sessionId: finalizedSessionId } = await api.transcription.stop()
 
         return { sessionId: finalizedSessionId, saveError: null }

@@ -2,7 +2,7 @@ import { app, safeStorage } from 'electron'
 import { existsSync } from 'fs'
 import { mkdir, readFile, unlink, writeFile } from 'fs/promises'
 import { join } from 'path'
-import type { ApiKeyStatus } from '@shared/ipc'
+import type { ApiKeyStatus } from '@shared/settings'
 
 export const OPENAI_API_KEY_ERROR =
   'OpenAI API key not configured. Add it in Settings → AI Providers.'

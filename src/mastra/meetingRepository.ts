@@ -5,10 +5,12 @@ import type {
   SavedTranscriptEntry,
   SessionListEntry,
   SessionLoadResult,
-  SessionStatus,
   SummaryStatus
 } from '@shared/ipc'
+import { UNTITLED_SESSION_TITLE } from '@shared/transcript'
 import { MEETIFY_RESOURCE_ID } from './storage'
+
+export type SessionStatus = 'recording' | 'completed'
 
 type MeetingThreadMetadata = {
   startedAt: string
@@ -17,8 +19,6 @@ type MeetingThreadMetadata = {
   summaryStatus?: SummaryStatus
   summary?: string
 }
-
-const UNTITLED_SESSION_TITLE = 'Untitled'
 
 function formatSessionTitle(): string {
   return UNTITLED_SESSION_TITLE
@@ -128,12 +128,26 @@ export async function createRecordingSession(
 export async function appendTranscriptEntry(
   memory: MemoryStorage,
   sessionId: string,
-  entry: SavedTranscriptEntry,
-  _startedAt: string
+  entry: SavedTranscriptEntry
 ): Promise<void> {
   const trimmed = entry.text.trim()
 
   if (!trimmed) {
+    return
+  }
+
+  const { messages } = await memory.listMessages({
+    threadId: sessionId,
+    resourceId: MEETIFY_RESOURCE_ID,
+    perPage: false
+  })
+
+  const hasDuplicate = messages.some((message) => {
+    const existingItemId = message.content.metadata?.itemId
+    return typeof existingItemId === 'string' && existingItemId === entry.itemId
+  })
+
+  if (hasDuplicate) {
     return
   }
 
@@ -326,8 +340,26 @@ export async function getMeetingTranscriptEntries(
   memory: MemoryStorage,
   sessionId: string
 ): Promise<SavedTranscriptEntry[]> {
-  const session = await loadMeetingSession(memory, sessionId)
-  return session?.transcript ?? []
+  const thread = await memory.getThreadById({
+    threadId: sessionId,
+    resourceId: MEETIFY_RESOURCE_ID
+  })
+
+  if (!thread) {
+    return []
+  }
+
+  const meta = parseThreadMetadata(thread.metadata)
+  const { messages } = await memory.listMessages({
+    threadId: sessionId,
+    resourceId: MEETIFY_RESOURCE_ID,
+    perPage: false,
+    orderBy: { field: 'createdAt', direction: 'ASC' }
+  })
+
+  return messages
+    .map((message) => messageToTranscriptEntry(message, meta.startedAt))
+    .toSorted((a, b) => a.itemStartedAtMs - b.itemStartedAtMs)
 }
 
 export async function deleteMeetingSession(

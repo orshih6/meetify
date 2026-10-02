@@ -1,5 +1,7 @@
 import type { SavedTranscriptEntry, TranscriptSource } from '@shared/ipc'
 
+export const UNTITLED_SESSION_TITLE = 'Untitled'
+
 export const SOURCE_LABELS: Record<TranscriptSource, string> = {
   me: 'Me',
   interviewer: 'Them'

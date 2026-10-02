@@ -1,8 +1,7 @@
 import type { MeetingSession } from '@renderer/types/meeting'
-import { formatDuration } from '@shared/transcript'
+import { formatDuration, UNTITLED_SESSION_TITLE } from '@shared/transcript'
 
 const AUTO_RECORDING_TITLE_PREFIX = /^Recording\s/i
-const UNTITLED_SESSION_TITLE = 'Untitled'
 const LIST_TITLE_MAX_LENGTH = 40
 
 export { formatDuration }

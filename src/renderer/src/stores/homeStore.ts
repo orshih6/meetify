@@ -3,14 +3,11 @@ import {
   getLiveDisplayTextBySource,
   type RecordingPipeline
 } from '@renderer/lib/recording'
+import { toErrorMessage } from '@renderer/lib/errors'
 import { useSessionCatalogStore } from '@renderer/stores/sessionCatalogStore'
 import type { TranscriptSource } from '@shared/ipc'
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
-
-function toErrorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback
-}
 
 const recordingPipeline: RecordingPipeline = createRecordingPipeline()
 
@@ -78,13 +75,12 @@ export const useHomeStore = create<HomeState>((set, get) => ({
     })
 
     try {
-      const startedAt = Date.now()
-      const { warning, sources } = await recordingPipeline.start()
+      const { startedAtMs, warning, sources } = await recordingPipeline.start()
 
       set({
         isRecording: true,
         isStarting: false,
-        recordingStartedAt: startedAt,
+        recordingStartedAt: startedAtMs,
         recordingWarning: warning,
         activeSources: sources
       })

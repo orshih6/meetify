@@ -5,7 +5,8 @@
     "src/main/**/*",
     "src/preload/**/*",
     "src/shared/**/*",
-    "src/mastra/**/*"
+    "src/mastra/**/*",
+    "src/scripts/**/*"
   ],
   "compilerOptions": {
     "composite": true,

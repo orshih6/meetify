@@ -3,11 +3,6 @@ import type { SavedTranscriptEntry, TranscriptSource } from '@shared/ipc'
 
 export { SOURCE_LABELS }
 
-export const TRANSCRIPT_SOURCES = [
-  'me',
-  'interviewer'
-] as const satisfies readonly TranscriptSource[]
-
 export type LiveTranscriptState = {
   entries: SavedTranscriptEntry[]
   partials: Record<string, string>

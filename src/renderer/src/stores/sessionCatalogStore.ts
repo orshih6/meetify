@@ -5,9 +5,8 @@ import {
 import { useSessionNavigationStore } from '@renderer/stores/sessionNavigationStore'
 import type { MeetingSession } from '@renderer/types/meeting'
 import type { SessionLoadResult } from '@shared/ipc'
+import { UNTITLED_SESSION_TITLE } from '@shared/transcript'
 import { create } from 'zustand'
-
-const UNTITLED_SESSION_TITLE = 'Untitled'
 
 type SessionCatalogState = {
   sessions: MeetingSession[]

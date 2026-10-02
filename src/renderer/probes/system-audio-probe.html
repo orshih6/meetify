@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>System audio probe</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 16px;
+        color: #0f172a;
+        background: #f8fafc;
+      }
+
+      button {
+        font: inherit;
+        padding: 8px 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: white;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      #status {
+        margin-top: 12px;
+        font-size: 13px;
+        color: #475569;
+        white-space: pre-wrap;
+      }
+
+      #transcript {
+        margin-top: 16px;
+        padding: 12px;
+        min-height: 120px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: white;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 style="font-size: 16px; margin: 0 0 8px">System audio → OpenAI Realtime</h1>
+    <p style="margin: 0 0 12px; font-size: 13px; color: #64748b">
+      Captures loopback audio via screen share. Play audio on your Mac after clicking Start.
+    </p>
+    <button id="start">Start capture</button>
+    <div id="status">Waiting for WS session…</div>
+    <div id="transcript"></div>
+
+    <script>
+      const TARGET_SAMPLE_RATE = 24000
+      const startButton = document.getElementById('start')
+      const statusEl = document.getElementById('status')
+      const transcriptEl = document.getElementById('transcript')
+
+      let captureStream = null
+      let audioContext = null
+      let processor = null
+      let partialLine = ''
+
+      function setStatus(text) {
+        statusEl.textContent = text
+      }
+
+      function appendTranscript(text) {
+        transcriptEl.textContent += text
+        transcriptEl.scrollTop = transcriptEl.scrollHeight
+      }
+
+      function resample(input, inputRate, outputRate) {
+        if (inputRate === outputRate) {
+          return input
+        }
+
+        const ratio = inputRate / outputRate
+        const outputLength = Math.floor(input.length / ratio)
+        const output = new Float32Array(outputLength)
+
+        for (let i = 0; i < outputLength; i++) {
+          const sourceIndex = i * ratio
+          const lower = Math.floor(sourceIndex)
+          const upper = Math.min(lower + 1, input.length - 1)
+          const weight = sourceIndex - lower
+          output[i] = input[lower] * (1 - weight) + input[upper] * weight
+        }
+
+        return output
+      }
+
+      function floatTo16BitPcm(input) {
+        const output = new Int16Array(input.length)
+
+        for (let i = 0; i < input.length; i++) {
+          const sample = Math.max(-1, Math.min(1, input[i]))
+          output[i] = sample < 0 ? sample * 0x8000 : sample * 0x7fff
+        }
+
+        return output
+      }
+
+      function stopCapture() {
+        if (processor) {
+          processor.disconnect()
+          processor = null
+        }
+
+        if (audioContext) {
+          void audioContext.close()
+          audioContext = null
+        }
+
+        if (captureStream) {
+          for (const track of captureStream.getTracks()) {
+            track.stop()
+          }
+
+          captureStream = null
+        }
+      }
+
+      async function startCapture() {
+        stopCapture()
+        setStatus('Requesting display media…')
+
+        captureStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
+
+        for (const track of captureStream.getVideoTracks()) {
+          track.enabled = false
+        }
+
+        const hasAudio = captureStream.getAudioTracks().some((track) => track.readyState === 'live')
+
+        if (!hasAudio) {
+          stopCapture()
+          setStatus('No system audio track — grant audio in the picker or check macOS permissions.')
+          startButton.disabled = false
+          return
+        }
+
+        audioContext = new AudioContext()
+        const gain = audioContext.createGain()
+        gain.gain.value = 0
+        gain.connect(audioContext.destination)
+
+        const source = audioContext.createMediaStreamSource(captureStream)
+        processor = audioContext.createScriptProcessor(4096, 1, 1)
+
+        processor.onaudioprocess = (event) => {
+          const channel = event.inputBuffer.getChannelData(0)
+          const resampled = resample(channel, audioContext.sampleRate, TARGET_SAMPLE_RATE)
+          const pcm = floatTo16BitPcm(resampled)
+          window.probe.sendPcm(pcm.buffer)
+        }
+
+        source.connect(processor)
+        processor.connect(gain)
+
+        setStatus('Capturing system audio — play sound on your Mac.')
+        startButton.disabled = true
+      }
+
+      window.probe.onTranscript((event) => {
+        if (event.type === 'ready') {
+          setStatus(`WS ready (${event.eventType}). Click Start to capture system audio.`)
+          return
+        }
+
+        if (event.type === 'delta') {
+          partialLine += event.delta
+          return
+        }
+
+        if (event.type === 'utterance') {
+          if (partialLine) {
+            partialLine = ''
+          }
+
+          appendTranscript(`${event.text}\n`)
+          return
+        }
+
+        if (event.type === 'error') {
+          setStatus(`Error: ${event.message}`)
+          startButton.disabled = false
+        }
+      })
+
+      startButton.addEventListener('click', () => {
+        startButton.disabled = true
+        void startCapture().catch((error) => {
+          setStatus(`Capture failed: ${error instanceof Error ? error.message : String(error)}`)
+          startButton.disabled = false
+        })
+      })
+    </script>
+  </body>
+</html>

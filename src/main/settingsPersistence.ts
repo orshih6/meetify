@@ -1,7 +1,8 @@
 import { app, ipcMain } from 'electron'
 import { mkdir, readFile, writeFile } from 'fs/promises'
 import { join } from 'path'
-import { DEFAULT_APP_SETTINGS, IPC_CHANNELS, type AppSettings } from '@shared/ipc'
+import { DEFAULT_APP_SETTINGS, type AppSettings } from '@shared/settings'
+import { IPC_CHANNELS } from '@shared/ipc'
 
 function settingsPath(): string {
   return join(app.getPath('userData'), 'settings.json')

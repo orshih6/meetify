@@ -30,10 +30,6 @@ export function meetingSessionFromLoadResult(result: SessionLoadResult): Meeting
   }
 }
 
-export function meetingSessionFromLoad(result: SessionLoadResult): MeetingSession {
-  return meetingSessionFromLoadResult(result)
-}
-
 export type SessionDateGroup = {
   label: string
   sessions: MeetingSession[]

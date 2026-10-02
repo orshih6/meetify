@@ -1,6 +1,3 @@
-export type { SavedSessionTranscript, SavedTranscriptEntry, TranscriptSource } from '@shared/ipc'
-export type { SummaryStatus } from '@shared/ipc'
-
 export type TranscriptEntry = {
   speaker: string
   time: string

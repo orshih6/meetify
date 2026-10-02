@@ -1,9 +1,10 @@
+export type SummaryStatus = 'processing' | 'ready' | 'error'
+
 export type TranscriptSource = 'me' | 'interviewer'
 
 export type TranscriptionDeltaPayload = {
   source: TranscriptSource
   itemId: string
-  contentIndex?: number
   delta: string
   itemStartedAtMs?: number
 }
@@ -36,41 +37,6 @@ export type SavedTranscriptEntry = {
   itemStartedAtMs: number
 }
 
-export type SavedSessionTranscript = {
-  startedAt: string
-  durationSeconds: number
-  transcript: SavedTranscriptEntry[]
-}
-
-export type SummaryStatus = 'processing' | 'ready' | 'error'
-
-export type SessionStatus = 'recording' | 'completed'
-
-export type SessionAppendTranscriptPayload = {
-  sessionId: string
-  entry: SavedTranscriptEntry
-}
-
-export type SessionFinalizeRecordingPayload = {
-  sessionId: string
-  stoppedAt: number
-}
-
-export type SessionFinalizeRecordingResult = {
-  sessionId: string
-  durationSeconds: number
-  entryCount: number
-}
-
-export type TranscriptionStartResult = {
-  sessionId: string
-}
-
-export type TranscriptionStopResult = {
-  sessionId: string | null
-  entryCount: number
-}
-
 export type SessionListEntry = {
   sessionId: string
   title: string
@@ -89,27 +55,19 @@ export type SessionLoadResult = {
   summaryStatus?: SummaryStatus
 }
 
+export type TranscriptionStartResult = {
+  sessionId: string
+  startedAtMs: number
+}
+
+export type TranscriptionStopResult = {
+  sessionId: string | null
+}
+
 export type SummaryGenerateResult = {
   summary: string
 }
 
 export type TitleGenerateResult = {
   title: string
-}
-
-export type ApiKeyStatus = {
-  configured: boolean
-  source: 'settings' | 'env' | 'none'
-}
-
-export type AppSettings = {
-  speechProvider: 'openai-realtime'
-  language: string
-  inputDeviceId: string | null
-}
-
-export const DEFAULT_APP_SETTINGS: AppSettings = {
-  speechProvider: 'openai-realtime',
-  language: 'en',
-  inputDeviceId: null
 }

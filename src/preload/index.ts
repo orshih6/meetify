@@ -2,11 +2,6 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import { IPC_CHANNELS } from '@shared/ipc'
 import type {
-  ApiKeyStatus,
-  AppSettings,
-  SessionAppendTranscriptPayload,
-  SessionFinalizeRecordingPayload,
-  SessionFinalizeRecordingResult,
   SessionListEntry,
   SessionLoadResult,
   SummaryGenerateResult,
@@ -19,6 +14,7 @@ import type {
   TranscriptionUtterancePayload,
   TranscriptSource
 } from '@shared/ipc'
+import type { ApiKeyStatus, AppSettings } from '@shared/settings'
 
 function onTranscriptionDelta(callback: (payload: TranscriptionDeltaPayload) => void): () => void {
   const handler = (_event: IpcRendererEvent, payload: TranscriptionDeltaPayload): void => {
@@ -91,12 +87,6 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.recording.requestMicPermission)
   },
   session: {
-    appendTranscript: (payload: SessionAppendTranscriptPayload): Promise<void> =>
-      ipcRenderer.invoke(IPC_CHANNELS.session.appendTranscript, payload),
-    finalizeRecording: (
-      payload: SessionFinalizeRecordingPayload
-    ): Promise<SessionFinalizeRecordingResult> =>
-      ipcRenderer.invoke(IPC_CHANNELS.session.finalizeRecording, payload),
     list: (): Promise<SessionListEntry[]> => ipcRenderer.invoke(IPC_CHANNELS.session.list),
     load: (sessionId: string): Promise<SessionLoadResult | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.session.load, sessionId),

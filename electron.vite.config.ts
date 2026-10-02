@@ -16,6 +16,14 @@ export default defineConfig({
   preload: {
     resolve: {
       alias: sharedAlias
+    },
+    build: {
+      rollupOptions: {
+        input: {
+          index: resolve('src/preload/index.ts'),
+          systemAudioProbe: resolve('src/main/probes/systemAudioProbePreload.ts')
+        }
+      }
     }
   },
   renderer: {

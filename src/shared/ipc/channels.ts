@@ -3,8 +3,6 @@ export const IPC_CHANNELS = {
     requestMicPermission: 'recording:request-mic-permission'
   },
   session: {
-    appendTranscript: 'session:append-transcript',
-    finalizeRecording: 'session:finalize-recording',
     list: 'session:list',
     load: 'session:load',
     delete: 'session:delete'

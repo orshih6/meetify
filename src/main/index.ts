@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow } from 'electron'
-import { existsSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { loadEnvFile } from '@shared/loadEnvFile'
 import icon from '../../resources/icon.png?asset'
 import { registerAppHandlers } from './appHandlers'
 import { registerDisplayMediaHandler } from './displayCapture'
@@ -14,45 +14,11 @@ import { registerCredentialsHandlers } from './credentialsHandlers'
 import { registerSettingsHandlers } from './settingsPersistence'
 import { registerGlobalShortcuts, unregisterGlobalShortcuts } from './shortcuts'
 import { registerTranscriptionHandlers } from './transcription'
+import { startSystemAudioProbe } from './probes/systemAudioProbe'
 
 let mainWindow: BrowserWindow | null = null
 
-function loadEnvFile(): void {
-  const envPaths = [join(process.cwd(), '.env'), join(__dirname, '../../.env')]
-
-  for (const envPath of envPaths) {
-    if (!existsSync(envPath)) {
-      continue
-    }
-
-    const lines = readFileSync(envPath, 'utf8').split('\n')
-
-    for (const line of lines) {
-      const trimmed = line.trim()
-
-      if (!trimmed || trimmed.startsWith('#')) {
-        continue
-      }
-
-      const separatorIndex = trimmed.indexOf('=')
-
-      if (separatorIndex === -1) {
-        continue
-      }
-
-      const key = trimmed.slice(0, separatorIndex).trim()
-      const value = trimmed.slice(separatorIndex + 1).trim()
-
-      if (key && process.env[key] === undefined) {
-        process.env[key] = value
-      }
-    }
-
-    break
-  }
-}
-
-loadEnvFile()
+loadEnvFile(process.cwd(), join(__dirname, '../..'))
 
 function createWindow(): void {
   // Create the browser window.
@@ -98,6 +64,11 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
+  if (process.env.MEETIFY_PROBE === 'system-audio') {
+    await startSystemAudioProbe()
+    return
+  }
+
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.personalapp.meetify')
 

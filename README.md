@@ -75,9 +75,29 @@ cp .env.example .env   # add OPENAI_API_KEY
 pnpm dev
 ```
 
+### Manual probes
+
+For quick manual checks of OpenAI Realtime transcription (not automated tests):
+
+```bash
+pnpm probe:ws      # WS smoke test (silence)
+pnpm probe:mic     # mic via ffmpeg
+pnpm probe:system  # system audio loopback window
+```
+
+**API key** — same as normal dev; do not pass it on the command line:
+
+1. **`.env`** (gitignored) — `cp .env.example .env` and set `OPENAI_API_KEY=...`
+2. **Settings → AI Providers** — works for `probe:system` (Electron reads encrypted storage); mic/ws Node probes use `.env` only
+
+**Other prerequisites:** `ffmpeg` on PATH for `probe:mic`. System audio may need macOS System Audio Recording permission in packaged builds.
+
 **Scripts**
 
 - `pnpm dev` — run app with hot reload
+- `pnpm probe:mic` — manual mic → OpenAI Realtime WS probe (requires `ffmpeg` on PATH)
+- `pnpm probe:ws` — WS connectivity probe (silence, no hardware)
+- `pnpm probe:system` — minimal Electron window for system audio loopback → WS
 - `pnpm build` — typecheck and production build
 - `pnpm build:mac` / `build:win` / `build:linux` — platform installers
 - `pnpm lint` — ESLint

@@ -33,6 +33,7 @@ type SessionState = {
   ready: Promise<void>
   closingIntentionally: boolean
   itemStartedAtMs: Map<string, number>
+  itemPartials: Map<string, string>
 }
 
 type ActiveTranscription = {
@@ -87,6 +88,26 @@ function cleanupAllSessions(): void {
   }
 }
 
+async function flushPendingPartials(): Promise<void> {
+  if (!active) {
+    return
+  }
+
+  for (const session of active.sessions.values()) {
+    for (const [itemId, text] of session.itemPartials) {
+      const trimmed = text.trim()
+
+      if (!trimmed) {
+        continue
+      }
+
+      await persistCompletedUtterance(session.source, trimmed, itemId, session)
+    }
+
+    session.itemPartials.clear()
+  }
+}
+
 async function persistCompletedUtterance(
   source: TranscriptSource,
   transcript: string,
@@ -101,7 +122,7 @@ async function persistCompletedUtterance(
   const entry = buildTranscriptEntry({ source, text: transcript, itemId, itemStartedAtMs })
   const memory = getElectronMemoryStore()
 
-  await appendTranscriptEntry(memory, active.sessionId, entry, active.startedAt)
+  await appendTranscriptEntry(memory, active.sessionId, entry)
 
   return itemStartedAtMs
 }
@@ -129,7 +150,8 @@ async function createSession(
     hasPendingAudio: false,
     ready,
     closingIntentionally: false,
-    itemStartedAtMs: new Map()
+    itemStartedAtMs: new Map(),
+    itemPartials: new Map()
   }
 
   if (!active) {
@@ -188,10 +210,13 @@ async function createSession(
       event.item_id
     ) {
       const itemStartedAtMs = session.itemStartedAtMs.get(event.item_id)
+      session.itemPartials.set(
+        event.item_id,
+        (session.itemPartials.get(event.item_id) ?? '') + event.delta
+      )
       sendToRenderer(IPC_CHANNELS.transcription.delta, {
         source,
         itemId: event.item_id,
-        contentIndex: event.content_index,
         delta: event.delta,
         itemStartedAtMs
       })
@@ -205,6 +230,7 @@ async function createSession(
     ) {
       void persistCompletedUtterance(source, event.transcript, event.item_id, session)
         .then((itemStartedAtMs) => {
+          session.itemPartials.delete(event.item_id!)
           sendToRenderer(IPC_CHANNELS.transcription.utterance, {
             source,
             itemId: event.item_id!,
@@ -258,7 +284,10 @@ async function createSession(
   await ready
 }
 
-async function startSessions(sender: WebContents, sources: TranscriptSource[]): Promise<string> {
+async function startSessions(
+  sender: WebContents,
+  sources: TranscriptSource[]
+): Promise<{ sessionId: string; startedAtMs: number }> {
   const apiKey = await getOpenAiApiKey()
 
   if (active) {
@@ -290,12 +319,12 @@ async function startSessions(sender: WebContents, sources: TranscriptSource[]): 
     throw error
   }
 
-  return sessionId
+  return { sessionId, startedAtMs }
 }
 
-async function stopSessions(): Promise<{ sessionId: string | null; entryCount: number }> {
+async function stopSessions(): Promise<{ sessionId: string | null }> {
   if (!active) {
-    return { sessionId: null, entryCount: 0 }
+    return { sessionId: null }
   }
 
   const { sessionId } = active
@@ -308,6 +337,8 @@ async function stopSessions(): Promise<{ sessionId: string | null; entryCount: n
     }
   }
 
+  await flushPendingPartials()
+
   cleanupAllSessions()
 
   const memory = getElectronMemoryStore()
@@ -316,16 +347,15 @@ async function stopSessions(): Promise<{ sessionId: string | null; entryCount: n
 
   if (entryCount === 0) {
     await deleteMeetingSession(memory, sessionId)
-    return { sessionId: null, entryCount: 0 }
+    return { sessionId: null }
   }
 
-  return { sessionId, entryCount }
+  return { sessionId }
 }
 
 export function registerTranscriptionHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.transcription.start, async (event, sources: TranscriptSource[]) => {
-    const sessionId = await startSessions(event.sender, sources)
-    return { sessionId }
+    return startSessions(event.sender, sources)
   })
 
   ipcMain.handle(IPC_CHANNELS.transcription.stop, async () => {

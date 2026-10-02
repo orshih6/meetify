@@ -1,4 +1,4 @@
-import type { ApiKeyStatus, AppSettings } from '@shared/ipc'
+import type { ApiKeyStatus, AppSettings } from '@shared/settings'
 import { listAudioInputDevices, type AudioInputDevice } from '@renderer/lib/audioDevices'
 import { create } from 'zustand'
 

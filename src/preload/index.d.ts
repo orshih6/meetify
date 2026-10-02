@@ -1,10 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 import type {
-  ApiKeyStatus,
-  AppSettings,
-  SessionAppendTranscriptPayload,
-  SessionFinalizeRecordingPayload,
-  SessionFinalizeRecordingResult,
   SessionListEntry,
   SessionLoadResult,
   SummaryGenerateResult,
@@ -17,6 +12,7 @@ import type {
   TranscriptionUtterancePayload,
   TranscriptSource
 } from '@shared/ipc'
+import type { ApiKeyStatus, AppSettings } from '@shared/settings'
 
 declare global {
   interface Window {
@@ -27,10 +23,6 @@ declare global {
         requestMicPermission: () => Promise<boolean>
       }
       session: {
-        appendTranscript: (payload: SessionAppendTranscriptPayload) => Promise<void>
-        finalizeRecording: (
-          payload: SessionFinalizeRecordingPayload
-        ) => Promise<SessionFinalizeRecordingResult>
         list: () => Promise<SessionListEntry[]>
         load: (sessionId: string) => Promise<SessionLoadResult | null>
         delete: (sessionId: string) => Promise<void>
